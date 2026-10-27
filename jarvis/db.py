@@ -14,7 +14,7 @@ _lock = threading.RLock()
 _conn = None
 
 STATUSES = ("queued", "running", "review", "done", "failed", "cancelled")
-TYPES = ("auto", "brainstorm", "seo", "browser", "research", "write")
+TYPES = ("auto", "brainstorm", "seo", "browser", "desktop", "research", "write")
 
 DEFAULT_SETTINGS = {
     "provider": "gemini",          # gemini | ollama
@@ -29,10 +29,18 @@ DEFAULT_SETTINGS = {
     "browser_max_steps": "25",
     # comma-separated sites the Chrome agent may open (empty = any). Wildcards like *.google.com work.
     "browser_allowed_domains": "",
+    "desktop_max_steps": "20",
+    "voice_engine": "local",       # local = offline wake word + Whisper + Kokoro on this PC; browser = Chrome speech
+    "wake_on": "0",                # listen for the wake word
+    "whisper_model": "base",       # tiny | base | small  (bigger = more accurate, slower)
+    "tts_voice": "af_heart",       # Kokoro voice
     "about_me": "",
     "worker_paused": "0",
     "speak_replies": "1",          # AgentJ answers voice commands out loud
     "voice_lang": "en-IN",         # speech recognition language
+    # what you say to wake it up; speech-to-text often hears "AgentJ" as "agent jay" etc.
+    "wake_words": "agentj, agent j, agent jay, agent jae, hey agent, ajent j",
+    "notify": "1",                 # desktop notification + chime when a task needs review
 }
 
 REPEATS = ("", "daily", "weekdays", "weekly")

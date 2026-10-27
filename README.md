@@ -1,6 +1,6 @@
 # AgentJ — your local Jarvis
 
-A lightweight personal agent that runs on **your own PC**. You give it your to-do list, it works through the tasks one by one, and everything lands in **Needs review** so you can approve it or send it back with feedback.
+A personal agent that runs on **your own PC**. Say **"AgentJ"** and tell it what you need. It works through your tasks one at a time, in your own Chrome or on your desktop, and every result lands in **For you** so you can approve it or send it back with a note.
 
 - **Local-first:** tasks, results, logs and settings are stored in `data/agentj.db` on your computer. No account and no cloud database.
 - **Light:** the dashboard and most agents use only Python's standard library, so there's no heavy framework and it uses very little memory.
@@ -13,37 +13,52 @@ A lightweight personal agent that runs on **your own PC**. You give it your to-d
 | **Brainstorm** | Video ideas, content angles, names, plans | Structured ideas, then top picks, then next steps |
 | **SEO** | "SEO audit of canadiansme.ca" | Fetches the page, runs 16 on-page checks, robots.txt, sitemap and Google PageSpeed (mobile), then writes a prioritised fix list with a rewritten title and meta description |
 | **Browser** | YouTube Studio, Search Console, any website | Uses [browser-use](https://github.com/browser-use/browser-use) (MIT) to operate a real Chrome window |
+| **Desktop** | Excel, folders, any app on your PC | Looks at the screen, decides with Gemini, then moves your mouse and keyboard |
 | **Research** | "Latest small-business grants in Ontario" | Gemini with Google Search grounding, with sources |
 | **Write** | Emails, posts, captions, summaries | Finished drafts, ready to use |
 
 You can pick the type yourself or leave it on **Auto**. You can also paste your whole day under **Paste to-do list** and AgentJ splits it into tasks.
 
-### Talk to it
+### Talk to it: say "AgentJ"
 
-Click 🎙 (or press **Alt+J**), say what you want, then click **Done**. For example:
+Click **wake word off** in the top bar to turn it on. Then just say:
 
-- "Do an SEO audit of b2bprint.ca and brainstorm five blog ideas" adds two tasks.
-- "Run my YouTube comments playbook" starts that playbook.
-- "What's left?", "Pause" and "Resume" control the queue.
+- "AgentJ, do an SEO audit of b2bprint.ca and brainstorm five blog ideas" adds two tasks.
+- "AgentJ, run my YouTube comments routine" starts a routine.
+- "AgentJ, brief me" reads out your day. "What's left?", "Pause" and "Resume" work too.
 
-AgentJ answers out loud. You can turn that off and choose your language in Settings → Voice. Voice uses Chrome's built-in speech recognition, so open the dashboard in Chrome or Edge and allow the microphone. Chrome processes the speech on Google's servers. Your tasks and results stay on your PC.
+You can also press **Alt+J** or click **talk** and speak without the wake word.
 
-### Playbooks: teach it your repeated tasks
+Voice runs **offline on your PC**, and no audio leaves your computer. It uses three open-source pieces:
 
-Open the **Playbooks** tab and click **New playbook**. Then press 🎙 and explain how you do the task, the way you'd explain it to a new assistant. Click **Turn into playbook** and AgentJ writes it up as:
+- **[Vosk](https://github.com/alphacep/vosk-api)** listens only for "AgentJ". It's a 40 MB model and uses very little CPU.
+- **[faster-whisper](https://github.com/SYSTRAN/faster-whisper)** turns what you say into text. It's the same Whisper engine that OmniVoice Studio uses.
+- **[Kokoro](https://github.com/thewh1teagle/kokoro-onnx)** speaks AgentJ's replies. It's one of OmniVoice Studio's voice engines.
+
+`install.bat` downloads these models once, about 500 MB. Until they're installed, AgentJ uses Chrome's speech recognition instead, which sends audio to Google. Choose accuracy, voice and engine in **Settings → Voice**.
+
+### Desktop tasks
+
+The desktop agent takes over your mouse and keyboard to work in apps, for example "Open Excel on my PC and total column B of the sponsorship sheet". To stop it instantly, **fling the mouse into the top-left corner of the screen**. Cancelling the task in the dashboard also stops it. Like the Chrome agent, it never sends, posts, deletes or buys anything and never types passwords. It stops with `NEEDS APPROVAL` instead.
+
+### Routines: teach it your repeated tasks
+
+Open the **routines** tab and click **new routine**. Then click **dictate** and explain how you do the task, the way you'd explain it to a new assistant. Click **write the steps for me** and AgentJ writes it up as:
 
 - **Name and trigger phrases:** what you'll say to start it.
 - **Agent:** Browser for anything done in Chrome.
 - **Steps:** the agent follows these exactly. Edit them freely.
 - **Schedule:** optional, for example weekdays at 09:30. It's added to Today's list automatically.
 
-Any task, typed or spoken, that mentions a trigger phrase uses that playbook. You can also turn a good result into a playbook with **📘 Save as playbook**.
+Any task, typed or spoken, that mentions a trigger phrase uses that routine. You can also turn a good result into a routine with **make a routine**.
 
 ### Dashboard
 
-- **Today** is your to-do list for the day, with a progress bar. Tasks show as ○ queued, ◐ running, ! needs your review and ✓ done.
-- **Needs review** is where you approve a result or Redo it with feedback.
-- Other features: priorities, repeating tasks, a live activity log, and Pause/Resume.
+AgentJ opens in its own app window, so it can keep listening while you work in Chrome.
+
+- **Left:** the voice panel and a box for typing tasks. Put one task per line to add a whole list. Below it, **now** shows what the agent is doing, step by step, as it works.
+- **Middle:** your day as a list: running, up next, waiting for you, done today and coming up. Other tabs show everything and your routines.
+- **Right:** **for you**, the results waiting for your review. Approve them in one click, or open one to read it and send it back with a note. A chime and a desktop notification tell you when something is ready.
 
 ## Setup (Windows, about 5 minutes)
 
@@ -99,13 +114,15 @@ Install [Ollama](https://ollama.com) and run `ollama pull qwen3:4b`. Then set **
 run.py                     start server + open dashboard
 jarvis/
   server.py                local web dashboard + JSON API (127.0.0.1 only)
-  worker.py                runs one task at a time, repeats + scheduled playbooks
+  worker.py                runs one task at a time, repeats + scheduled routines
+  voice.py                 offline wake word (Vosk) + Whisper + Kokoro
   db.py                    SQLite storage (data/agentj.db)
   llm.py                   Gemini (REST) + Ollama, auto-picks newest Gemini Flash model
   agents/
-    __init__.py            router (playbook match, keyword rules, then AI classification)
-    brainstorm.py  seo.py  browser.py  research.py  write.py
-  static/index.html        the dashboard (single file, no build step)
+    __init__.py            router (routine match, keyword rules, then AI classification)
+    brainstorm.py  seo.py  browser.py  desktop.py  research.py  write.py
+  static/index.html        the dashboard (single file, no build step; design: Hallmark "Lumen" theme)
+demo/                      builds the in-browser demo from the dashboard
 ```
 
 Open-source projects reviewed for this build:

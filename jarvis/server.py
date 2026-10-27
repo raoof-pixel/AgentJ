@@ -5,7 +5,7 @@ import os
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from . import db, llm, worker
+from . import db, llm, voice, worker
 from .agents import browser as browser_agent
 from .agents import match_playbook
 
@@ -59,7 +59,7 @@ def plan_from_text(text):
         raw = llm.generate(
             "Split this to-do list into separate, clear tasks for an AI assistant. "
             "For each return: title (short imperative), details (anything useful, may be empty), "
-            "type (one of: brainstorm, seo, browser, research, write), priority (1 high, 2 normal, 3 low), "
+            "type (one of: brainstorm, seo, browser, desktop, research, write), priority (1 high, 2 normal, 3 low), "
             "and playbook (exact name of a matching saved playbook, or empty).\n"
             f"Saved playbooks:\n{_playbook_names()}\n"
             "Return ONLY a JSON array.\n\nTO-DO LIST:\n" + text,
@@ -72,6 +72,32 @@ def plan_from_text(text):
     except Exception:
         pass
     return [_clean_item({"title": l}) for l in lines]
+
+
+def briefing():
+    """A short spoken summary of the day."""
+    today = db.now()[:10]
+    tasks = db.list_tasks()
+    review = [t for t in tasks if t["status"] == "review"]
+    queued = [t for t in tasks if t["status"] == "queued" and (not t["due_date"] or t["due_date"] <= today)]
+    done = [t for t in tasks if t["status"] == "done" and (t.get("finished_at") or t["updated_at"] or "")[:10] == today]
+    cur = worker.current_task_id()
+    parts = []
+    if review:
+        parts.append(f"{len(review)} result{'s' if len(review) != 1 else ''} waiting for your review, "
+                     f"starting with {review[0]['title']}")
+    if cur and db.get_task(cur):
+        parts.append(f"I'm working on {db.get_task(cur)['title']}")
+    if queued:
+        nxt = ", ".join(t["title"] for t in sorted(queued, key=lambda t: (t["priority"], t["id"]))[:3])
+        parts.append(f"{len(queued)} queued. Next up: {nxt}")
+    if done:
+        parts.append(f"{len(done)} done today")
+    sched = [p for p in db.list_playbooks() if p.get("enabled") and p.get("schedule")
+             and p.get("last_run_date") != today and p.get("run_time")]
+    if sched:
+        parts.append("Scheduled later: " + ", ".join(f"{p['name']} at {p['run_time']}" for p in sched[:3]))
+    return ("Here's your day. " + ". ".join(parts) + ".") if parts else "Your list is clear. Tell me what to do."
 
 
 def voice_command(text):
@@ -96,6 +122,11 @@ def voice_command(text):
         return {"reply": f"{c('queued')} queued, {c('review')} waiting for your review, "
                          f"{c('failed')} failed.{doing}", "created": []}
 
+    if re.search(r"\b(brief me|briefing|plan (?:for )?my day|my day|good morning|what'?s (?:on )?today)\b", low) and len(low) < 60:
+        return {"reply": briefing(), "created": []}
+    if re.search(r"^(never ?mind|cancel|nothing|stop listening|go to sleep)\b", low):
+        return {"reply": "Okay.", "created": []}
+
     items, reply = None, ""
     if not FAKE:
         try:
@@ -103,7 +134,7 @@ def voice_command(text):
                 "You are AgentJ, a voice-controlled assistant. The user said (speech-to-text, may have errors):\n"
                 f"\"{text}\"\n\nSaved playbooks (repeatable procedures the user taught you):\n{_playbook_names()}\n\n"
                 "Turn it into tasks. Return ONLY JSON: {\"reply\": \"one short spoken confirmation\", "
-                "\"tasks\": [{\"title\": \"...\", \"details\": \"...\", \"type\": \"auto|brainstorm|seo|browser|research|write\", "
+                "\"tasks\": [{\"title\": \"...\", \"details\": \"...\", \"type\": \"auto|brainstorm|seo|browser|desktop|research|write\", "
                 "\"priority\": 1-3, \"playbook\": \"exact playbook name or empty\"}]}. "
                 "If they mention a playbook by name or meaning, set playbook. Keep their details (URLs, numbers, names).",
                 temperature=0.2,
@@ -132,7 +163,7 @@ def teach_playbook(text):
     raw = llm.generate(
         "The user is explaining how to do a task they repeat. Turn it into a reusable playbook for an AI agent.\n"
         "Return ONLY JSON with: name (short), triggers (comma-separated phrases they might say to start it), "
-        "type (browser if it needs clicking around websites in Chrome, else seo/brainstorm/research/write), "
+        "type (browser for websites in Chrome, desktop for apps or files on the PC, else seo/brainstorm/research/write), "
         "steps (numbered, precise, keep every URL/name/number they gave; add a final step saying what to report), "
         "schedule (daily/weekdays/weekly or empty), run_time (HH:MM 24h or empty).\n\n"
         f"Their explanation:\n{text}",
@@ -161,8 +192,10 @@ class Handler(BaseHTTPRequestHandler):
         if ctype.startswith("text/html"):
             self.send_header(
                 "Content-Security-Policy",
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; "
+                "base-uri 'none'; form-action 'self'",
             )
         self.end_headers()
         self.wfile.write(data)
@@ -228,7 +261,12 @@ class Handler(BaseHTTPRequestHandler):
                 "chrome_mode": s.get("chrome_mode"),
                 "speak": s.get("speak_replies") == "1",
                 "voice_lang": s.get("voice_lang", "en-IN"),
+                "wake_words": s.get("wake_words", ""),
+                "notify": s.get("notify") == "1",
+                "voice": voice_state(s),
             })
+        if path == "/api/voice/state":
+            return self._send(200, voice_state())
         return self._send(404, {"error": "not found"})
 
     def do_POST(self):
@@ -255,6 +293,22 @@ class Handler(BaseHTTPRequestHandler):
             created = [db.create_task(i["title"], i["details"], i["type"], i["priority"], "", "", i["playbook_id"])
                        for i in items]
             return self._send(201, created)
+
+        if path == "/api/voice/wake":
+            on = bool(b.get("on"))
+            db.save_settings({"wake_on": "1" if on else "0"})
+            vs = voice_state()
+            if vs.get("engine") == "local":
+                svc = voice.service(_voice_handler)
+                svc.start() if on else svc.stop()
+            return self._send(200, voice_state())
+
+        if path == "/api/voice/ptt":
+            vs = voice_state()
+            if vs.get("engine") != "local":
+                return self._send(200, {"engine": "browser"})
+            voice.service(_voice_handler).push_to_talk()
+            return self._send(200, voice_state())
 
         if path == "/api/voice":
             return self._send(200, voice_command(b.get("text", "")))
@@ -292,6 +346,12 @@ class Handler(BaseHTTPRequestHandler):
                 vals.pop("gemini_api_key")  # unchanged masked value
             db.save_settings(vals)
             llm._model_cache.clear()
+            svc = voice.service()
+            if svc:
+                if "whisper_model" in vals:
+                    svc._whisper = None  # reload with the new size on next use
+                if vals.get("voice_engine") == "browser":
+                    svc.stop()
             browser_agent._status_cache["t"] = 0
             return self._send(200, {"ok": True})
 
@@ -341,8 +401,31 @@ class Handler(BaseHTTPRequestHandler):
         return self._send(404, {"error": "not found"})
 
 
+def voice_state(s=None):
+    s = s or db.get_settings()
+    svc = voice.service()
+    if s.get("voice_engine") != "local":
+        return {"engine": "browser"}
+    missing = voice.missing_packages()
+    if missing:
+        return {"engine": "browser", "missing": missing,
+                "note": "Local voice isn't installed yet, so Chrome's speech is used. Run install.bat to add it."}
+    snap = svc.snapshot() if svc else {"engine": "local", "state": "off", "heard": "", "reply": "", "error": "",
+                                        "level": 0, "tts": False}
+    snap["wake_on"] = s.get("wake_on") == "1"
+    return snap
+
+
+def _voice_handler(text):
+    return voice_command(text).get("reply", "Done.")
+
+
 def serve(port=8765):
     worker.start()
+    voice.service(_voice_handler)
+    s = db.get_settings()
+    if s.get("voice_engine") == "local" and s.get("wake_on") == "1" and not voice.missing_packages():
+        voice.service().start()
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"\n  AgentJ is running →  http://127.0.0.1:{port}\n  (Close this window to stop it.)\n")
     httpd.serve_forever()

@@ -1,275 +1,390 @@
 <title>AgentJ</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
+/* hallmark: theme lumen (night drop, deal: manual) · shape: app screen · genre: atmospheric · signature: the live run well, the agent narrating its work in mono over the blueprint grid
+   critique: the wake word state and the review inbox carry the screen; brass marks only the primary action, focus and the one live line; rose is the single verb "say".
+   waive 47c: blueprint grid inside the listen and run wells only, never under running text blocks.
+   waive 38iii: the verb "say" in the listen head takes the theme's rose. */
 :root{color-scheme:dark;
-  --bg:#0d1014; --panel:#151a20; --panel2:#1b2129; --line:#262e38; --text:#e7ecf2; --muted:#8b97a6;
-  --accent:#4fd1c5; --accent-ink:#06201d; --warn:#f6ad55; --bad:#fc8181; --good:#68d391; --blue:#63b3ed;
-  --r:12px; --font:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; --mono:Consolas,ui-monospace,monospace;
+  --color-paper:oklch(12.5% 0.027 290);--color-paper-2:oklch(16% 0.03 290);--color-paper-3:oklch(20% 0.032 290);
+  --color-ink:oklch(96% 0.01 300);--color-ink-2:oklch(85% 0.017 298);--color-muted:oklch(69% 0.026 295);
+  --color-rule:oklch(27% 0.034 290);--color-rule-2:oklch(36% 0.04 292);--rule-blueprint:oklch(96% 0.01 300 / 0.05);
+  --color-accent:oklch(80% 0.15 62);--color-accent-2:oklch(72% 0.15 12);--color-accent-ink:oklch(14% 0.028 290);
+  --color-live:oklch(80% 0.13 155);--color-focus:oklch(80% 0.15 62);--color-danger:oklch(72% 0.15 25);
+  --color-scrim:oklch(6% 0.02 290 / 0.6);
+  --font-display:"Instrument Serif",ui-serif,Georgia,serif;--font-body:"Geist",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --font-outlier:"Geist Mono",ui-monospace,Consolas,monospace;
+  --radius-card:10px;--radius-pill:999px;--rule-hair:1px;
+  --shadow-card:0 28px 64px -30px oklch(4% 0.02 290 / 0.8);
+  --tracking-display:-0.015em;
+  --text-xs:0.8125rem;--text-sm:0.875rem;--text-md:0.9375rem;--text-lg:1.0625rem;--text-xl:1.3rem;--text-display-s:2rem;--text-display:2.6rem;
+  --space-2xs:4px;--space-xs:8px;--space-sm:12px;--space-md:16px;--space-lg:24px;--space-xl:32px;
+  --dur-micro:120ms;--dur-short:220ms;--dur-long:420ms;
+  --ease-out:cubic-bezier(.2,.8,.2,1);--ease-in:cubic-bezier(.4,0,1,1);--ease-in-out:cubic-bezier(.6,0,.4,1);
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--font)}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--color-paper);color:var(--color-ink);font:400 var(--text-md)/1.5 var(--font-body);font-variant-numeric:tabular-nums}
+::selection{background:var(--color-accent);color:var(--color-accent-ink)}
 button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:7px 12px}
-button:hover{border-color:#3a4554}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-button.ghost{background:transparent}
-button.danger{color:var(--bad)}
-button:disabled{opacity:.6;cursor:default}
-input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
-textarea{resize:vertical}
-input:focus,select:focus,textarea:focus{outline:2px solid #2c6f69;border-color:transparent}
-header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:rgba(13,16,20,.94);backdrop-filter:blur(6px);z-index:5}
-.logo{font-weight:700;letter-spacing:.5px;font-size:17px;display:flex;align-items:center;gap:8px}
-.orb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#b2f5ea,var(--accent) 60%,#1d6b64);box-shadow:0 0 12px #4fd1c588}
-.orb.busy{animation:pulse 1.2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 22px #4fd1c5}}
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
-.dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
-.mic{width:44px;height:44px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:18px;border:1px solid #2c6f69;background:#0f2a27}
-.mic.on{background:var(--bad);border-color:var(--bad);animation:micpulse 1s infinite}
-@keyframes micpulse{50%{box-shadow:0 0 0 8px #fc818133}}
-.voicebar{display:none;max-width:1400px;margin:12px auto 0;padding:0 20px}
-.voicebar .inner{background:#0f2a27;border:1px solid #2c6f69;border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center}
-.voicebar .heard{flex:1;font-size:15px}
-main{display:grid;grid-template-columns:350px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
-@media(max-width:900px){main{grid-template-columns:1fr}.pills{display:none}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600}
-.row{display:flex;gap:8px}.row>*{flex:1}
-label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted)}
-.chip.on{border-color:var(--accent);color:var(--accent)}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
-.seg button{flex:1;border:0;border-radius:0;background:transparent;color:var(--muted)}
-.seg button.on{background:var(--panel2);color:var(--text)}
-.tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
-.tab{border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px}
-.tab.on{background:var(--panel2);color:var(--text)}
-.count{font-size:11px;background:var(--line);border-radius:99px;padding:1px 7px;margin-left:4px}
-.count.hot{background:var(--warn);color:#2b1a00}
-.list{display:flex;flex-direction:column;gap:8px}
-.task{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
-.task:hover{border-color:#36414e}
-.task .t{font-weight:600}
-.task.done .t{color:var(--muted);text-decoration:line-through}
-.task .meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
-.check{width:22px;height:22px;border-radius:50%;border:2px solid #3a4554;flex:none;display:grid;place-items:center;font-size:12px;margin-top:1px}
-.check.running{border-color:var(--blue);border-top-color:transparent;animation:spin .9s linear infinite}
-.check.review{border-color:var(--warn);color:var(--warn)}
-.check.done{border-color:var(--good);background:var(--good);color:#0b2914}
-.check.failed{border-color:var(--bad);color:var(--bad)}
-.badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
-.st-running{color:var(--blue);border-color:#2a4a66}.st-review{color:var(--warn);border-color:#5a4220}
-.st-done{color:var(--good);border-color:#24502f}.st-failed{color:var(--bad);border-color:#5b2a2a}
-.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:4px 0 14px}
-.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
-.today-head{display:flex;justify-content:space-between;align-items:baseline}
-.today-head b{font-size:18px}
-.empty{color:var(--muted);text-align:center;padding:40px 10px;border:1px dashed var(--line);border-radius:10px}
-.pb{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-.pb .t{font-weight:600}
-.pb .steps{color:var(--muted);font-size:13px;white-space:pre-wrap;max-height:80px;overflow:hidden;margin:6px 0}
-.drawer{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:20}
-.drawer.open{display:block}
-.sheet{position:absolute;right:0;top:0;bottom:0;width:min(760px,100%);background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
-.sheet-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
-.sheet-head h3{margin:0;font-size:17px;flex:1}
-.sheet-body{padding:18px 20px;overflow:auto;flex:1}
-.sheet-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.md{line-height:1.6}
-.md h1,.md h2,.md h3,.md h4{text-transform:none;letter-spacing:0;color:var(--text);margin:18px 0 6px;font-size:15px}
-.md h2{font-size:16px}.md h1{font-size:18px}
-.md code{font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:5px;font-size:13px}
-.md pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto}
-.md pre code{background:none;padding:0}
-.md a{color:var(--accent)}
-.md blockquote{margin:8px 0;padding:6px 12px;border-left:3px solid var(--warn);background:#2a2110;border-radius:4px}
-.md ul,.md ol{padding-left:22px;margin:6px 0}
-.md hr{border:0;border-top:1px solid var(--line);margin:18px 0}
-.md table{border-collapse:collapse;margin:8px 0}.md td,.md th{border:1px solid var(--line);padding:4px 8px}
-details.logs{margin-top:18px;border:1px solid var(--line);border-radius:8px}
-details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
-.loglines{font-family:var(--mono);font-size:12px;max-height:320px;overflow:auto;padding:8px 12px;border-top:1px solid var(--line);white-space:pre-wrap}
-.loglines .error{color:var(--bad)}.loglines .browser{color:#a3bffa}
-.loglines span.ts{color:#5c6b7d}
-.modal .sheet{width:min(600px,100%)}
-.hint{font-size:12px;color:var(--muted);margin-top:4px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;display:none;z-index:40;max-width:90vw}
-.spinner{display:inline-block;width:12px;height:12px;border:2px solid #2c6f69;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.banner{background:#2a2110;border:1px solid #5a4220;color:#fbd38d;padding:10px 14px;border-radius:10px;margin-bottom:14px;display:none}
-.banner a{color:inherit}
-kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--panel2)}
+:focus-visible{outline:2px solid var(--color-focus);outline-offset:2px}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:-2px}
+a{color:var(--color-ink);text-decoration-color:var(--color-rule-2);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--color-accent)}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;letter-spacing:var(--tracking-display);text-transform:lowercase;line-height:1;margin:0;text-wrap:balance;overflow-wrap:break-word;min-width:0}
+.readout{font:400 var(--text-xs)/1.5 var(--font-outlier);color:var(--color-ink-2);text-transform:lowercase}
+.muted{color:var(--color-muted)}
+.label{font-size:var(--text-sm);color:var(--color-muted);text-transform:lowercase}
+[hidden]{display:none!important}
 
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header,main,.demo-strip{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-main{padding-block:20px}
-.demo-strip{background:#122b28;border-bottom:1px solid #2c6f69;color:#b2f5ea;font-size:13px;padding-block:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.demo-strip a{color:var(--accent)}
+/* controls: one primary per screen (brass), everything else a hairline pill */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-xs);min-height:36px;padding:0 var(--space-md);border-radius:var(--radius-pill);border:0;background:transparent;
+  box-shadow:inset 0 0 0 var(--rule-hair) var(--color-rule-2);color:var(--color-ink);font-weight:500;font-size:var(--text-sm);text-transform:lowercase;cursor:pointer;white-space:nowrap;
+  transition:background-color var(--dur-short) var(--ease-out),box-shadow var(--dur-short) var(--ease-out),opacity var(--dur-micro)}
+.btn:hover{background:var(--color-paper-3)}
+.btn:active{opacity:.8}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn--primary{background:var(--color-accent);color:var(--color-accent-ink);box-shadow:none}
+.btn--primary:hover{background:oklch(84% 0.14 62)}
+.btn--quiet{box-shadow:none;color:var(--color-ink-2)}
+.btn--quiet:hover{color:var(--color-ink)}
+.btn--danger{color:var(--color-danger)}
+.btn--icon{width:36px;padding:0}
+.btn svg{width:16px;height:16px;flex:none}
+input,select,textarea{background:var(--color-paper);border:var(--rule-hair) solid var(--color-rule-2);border-radius:var(--radius-card);padding:8px 12px;width:100%;min-height:36px;font-size:var(--text-md)}
+textarea{resize:vertical;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--color-muted)}
+.field{display:grid;gap:var(--space-2xs)}
+.field>span{font-size:var(--text-sm);color:var(--color-muted)}
+.hint{font-size:var(--text-sm);color:var(--color-muted)}
+
+/* shell */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--color-paper);border-bottom:var(--rule-hair) solid var(--color-rule)}
+.top-in{max-width:1600px;margin:0 auto;display:flex;align-items:center;gap:var(--space-md);min-height:60px;padding:0 var(--space-lg)}
+.mark{font:400 1.7rem/1 var(--font-display);letter-spacing:var(--tracking-display);text-decoration:none;color:var(--color-ink);text-transform:lowercase}
+.top-state{display:flex;gap:var(--space-lg);margin-left:auto;align-items:center;flex-wrap:wrap}
+.state-ok{color:var(--color-live)}
+.state-warn{color:var(--color-accent-2)}
+.wake-toggle[aria-pressed="true"]{box-shadow:inset 0 0 0 var(--rule-hair) var(--color-live);color:var(--color-live)}
+.layout{max-width:1600px;margin:0 auto;padding:var(--space-lg);display:grid;gap:var(--space-lg);
+  grid-template-columns:minmax(300px,370px) minmax(0,1fr) minmax(280px,360px);align-items:start}
+.col{display:grid;gap:var(--space-lg);min-width:0}
+@media (max-width:1180px){.layout{grid-template-columns:minmax(300px,360px) minmax(0,1fr)}.col--review{grid-column:2;grid-row:1}.col--day{grid-column:2}}
+@media (max-width:760px){.layout{grid-template-columns:minmax(0,1fr);padding:var(--space-md)}.col--review,.col--day{grid-column:auto;grid-row:auto}.top-state .readout{display:none}.top-in{padding:0 var(--space-md)}}
+
+.well{background:var(--color-paper-2);border:var(--rule-hair) solid var(--color-rule);border-radius:var(--radius-card)}
+.blueprint{background-image:linear-gradient(var(--rule-blueprint) 1px,transparent 1px),linear-gradient(90deg,var(--rule-blueprint) 1px,transparent 1px);background-size:48px 48px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-sm)}
+.panel-head h2{font-size:var(--text-display-s)}
+
+/* listen well */
+.listen{padding:var(--space-lg);display:grid;gap:var(--space-md)}
+.listen h1{font-size:var(--text-display);line-height:.98}
+.verb{display:inline-block;color:var(--color-accent-2)}
+.verb::after{content:"";display:block;height:var(--rule-hair);background:currentColor;transform-origin:left;animation:draw var(--dur-long) var(--ease-out) both}
+@keyframes draw{from{transform:scaleX(0)}}
+.listen[data-mode="awake"] h1{color:var(--color-live)}
+.meter{height:2px;background:var(--color-rule);border-radius:2px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--color-live);transform-origin:left;transform:scaleX(var(--lvl,0));transition:transform 80ms linear}
+.heard{min-height:3em;font:400 var(--text-sm)/1.6 var(--font-outlier);color:var(--color-ink-2);overflow-wrap:anywhere}
+.reply{color:var(--color-ink);font-size:var(--text-md)}
+.compose{display:grid;gap:var(--space-sm);padding-top:var(--space-md);border-top:var(--rule-hair) solid var(--color-rule)}
+.compose-actions{display:flex;gap:var(--space-xs);align-items:center;flex-wrap:wrap}
+.compose-actions .grow{flex:1}
+details.opts summary{cursor:pointer;color:var(--color-muted);font-size:var(--text-sm);list-style:none;text-transform:lowercase}
+details.opts summary::-webkit-details-marker{display:none}
+details.opts[open] summary{margin-bottom:var(--space-sm)}
+.opts-grid{display:grid;gap:var(--space-sm);grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts-grid .wide{grid-column:1/-1}
+
+/* run well (signature) */
+.run{padding:var(--space-md) var(--space-lg) var(--space-lg);display:grid;gap:var(--space-sm)}
+.run-title{font-size:var(--text-lg);font-weight:500}
+.run-log{font:400 var(--text-xs)/1.7 var(--font-outlier);color:var(--color-muted);max-height:12.5em;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.run-log .last{color:var(--color-live)}
+.run-log .error{color:var(--color-danger)}
+
+/* day ledger */
+.tabs{display:flex;gap:var(--space-2xs);border-bottom:var(--rule-hair) solid var(--color-rule);overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--color-muted);padding:var(--space-xs) var(--space-sm);font-size:var(--text-md);text-transform:lowercase;cursor:pointer;min-height:44px;white-space:nowrap;transition:color var(--dur-short) var(--ease-out),border-color var(--dur-short) var(--ease-out)}
+.tab:hover{color:var(--color-ink)}
+.tab[aria-selected="true"]{color:var(--color-ink);border-bottom-color:var(--color-accent)}
+.dayhead{display:flex;align-items:end;justify-content:space-between;gap:var(--space-md);flex-wrap:wrap;padding:var(--space-lg) 0 var(--space-sm)}
+.dayhead h2{font-size:var(--text-display)}
+.progress{height:2px;background:var(--color-rule);border-radius:2px;overflow:hidden;margin-bottom:var(--space-md)}
+.progress i{display:block;height:100%;background:var(--color-accent);transform-origin:left;transform:scaleX(var(--p,0));transition:transform var(--dur-long) var(--ease-out)}
+.group{margin-top:var(--space-lg)}
+.group h3{font-size:var(--text-xl);margin-bottom:var(--space-xs);color:var(--color-ink-2)}
+.rows{list-style:none;margin:0;padding:0;border-top:var(--rule-hair) solid var(--color-rule)}
+.row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:var(--space-sm);align-items:center;padding:10px var(--space-xs);border-bottom:var(--rule-hair) solid var(--color-rule);cursor:pointer;transition:background-color var(--dur-short) var(--ease-out)}
+.row:hover{background:var(--color-paper-2)}
+.row-title{min-width:0;overflow-wrap:anywhere}
+.row.is-done .row-title{color:var(--color-muted);text-decoration:line-through;text-decoration-color:var(--color-rule-2)}
+.row-meta{display:flex;gap:var(--space-sm);align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.glyph{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--color-rule-2)}
+.glyph.running{box-shadow:inset 0 0 0 1.5px var(--color-live);border-top:1.5px solid transparent;animation:spin 1s linear infinite}
+.glyph.review{background:var(--color-accent);box-shadow:none}
+.glyph.done{background:var(--color-live);box-shadow:none}
+.glyph.failed{box-shadow:inset 0 0 0 1.5px var(--color-danger)}
+.glyph.cancelled{opacity:.4}
+@keyframes spin{to{transform:rotate(360deg)}}
+.prio-high{color:var(--color-accent)}
+.empty{padding:var(--space-xl) var(--space-md);text-align:left;color:var(--color-muted);border:var(--rule-hair) dashed var(--color-rule-2);border-radius:var(--radius-card);display:grid;gap:var(--space-sm);justify-items:start}
+.empty strong{color:var(--color-ink);font-weight:500}
+.skeleton{height:44px;border-bottom:var(--rule-hair) solid var(--color-rule);background:linear-gradient(90deg,transparent,var(--color-paper-2),transparent) 0 0/200% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* review inbox */
+.inbox{display:grid;gap:0;list-style:none;margin:0;padding:0;border-top:var(--rule-hair) solid var(--color-rule)}
+.item{padding:var(--space-md) 0;border-bottom:var(--rule-hair) solid var(--color-rule);display:grid;gap:var(--space-xs)}
+.item-title{font-weight:500;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.item-title:hover{text-decoration:underline;text-decoration-color:var(--color-accent);text-underline-offset:3px}
+.item-preview{color:var(--color-muted);font-size:var(--text-sm);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.item-actions{display:flex;gap:var(--space-xs)}
+.count{font:400 var(--text-sm)/1 var(--font-outlier);color:var(--color-accent)}
+
+/* routines */
+.routine{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-sm);padding:var(--space-md) var(--space-xs);border-bottom:var(--rule-hair) solid var(--color-rule)}
+.routine-name{font-weight:500}
+.routine-steps{color:var(--color-muted);font-size:var(--text-sm);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:var(--color-scrim);z-index:20;opacity:0;pointer-events:none;transition:opacity var(--dur-short) var(--ease-out)}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:absolute;right:0;top:0;bottom:0;width:min(760px,100%);background:var(--color-paper);border-left:var(--rule-hair) solid var(--color-rule);display:flex;flex-direction:column;box-shadow:var(--shadow-card);transform:translateX(24px);transition:transform var(--dur-long) var(--ease-out)}
+.scrim.open .sheet{transform:none}
+.sheet--narrow{width:min(600px,100%)}
+.sheet-head{padding:var(--space-lg);border-bottom:var(--rule-hair) solid var(--color-rule);display:flex;gap:var(--space-sm);align-items:flex-start}
+.sheet-head h2{font-size:var(--text-display-s);flex:1}
+.sheet-body{padding:var(--space-lg);overflow:auto;flex:1;display:grid;gap:var(--space-md);align-content:start}
+.sheet-foot{padding:var(--space-md) var(--space-lg);border-top:var(--rule-hair) solid var(--color-rule);display:flex;gap:var(--space-xs);flex-wrap:wrap;align-items:center}
+.sheet-foot input{flex:1;min-width:200px;width:auto}
+.sheet-body h3{font-size:var(--text-xl)}
+.grid2{display:grid;gap:var(--space-sm);grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid3{display:grid;gap:var(--space-sm);grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:560px){.grid2,.grid3,.opts-grid{grid-template-columns:minmax(0,1fr)}}
+dl.facts{display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-lg);margin:0}
+dl.facts div{display:flex;gap:var(--space-xs)}
+dl.facts dt{color:var(--color-muted);font-size:var(--text-sm)}
+dl.facts dd{margin:0;font:400 var(--text-xs)/1.7 var(--font-outlier);color:var(--color-ink-2)}
+
+/* rendered results */
+.md{line-height:1.65;max-width:72ch}
+.md h1,.md h2,.md h3,.md h4{font-family:var(--font-body);text-transform:none;letter-spacing:0;font-weight:500;font-size:var(--text-lg);margin:var(--space-lg) 0 var(--space-2xs);line-height:1.3}
+.md p{margin:var(--space-xs) 0}
+.md code{font:400 var(--text-xs) var(--font-outlier);background:var(--color-paper-2);padding:1px 5px;border-radius:4px}
+.md pre{background:var(--color-paper-2);border:var(--rule-hair) solid var(--color-rule);border-radius:var(--radius-card);padding:var(--space-sm);overflow:auto}
+.md pre code{background:none;padding:0}
+.md a{color:var(--color-ink)}
+.md blockquote{margin:var(--space-xs) 0;padding:var(--space-xs) var(--space-sm);border-left:2px solid var(--color-accent);background:var(--color-paper-2);border-radius:0 6px 6px 0}
+.md ul,.md ol{padding-left:22px;margin:var(--space-xs) 0}
+.md hr{border:0;border-top:var(--rule-hair) solid var(--color-rule);margin:var(--space-lg) 0}
+.md .tablewrap{overflow-x:auto}
+.md table{border-collapse:collapse;margin:var(--space-xs) 0}.md td,.md th{border-bottom:var(--rule-hair) solid var(--color-rule);padding:6px 10px;text-align:left}
+details.logs{border:var(--rule-hair) solid var(--color-rule);border-radius:var(--radius-card)}
+details.logs summary{padding:var(--space-xs) var(--space-sm);cursor:pointer;color:var(--color-muted);font-size:var(--text-sm)}
+.loglines{font:400 var(--text-xs)/1.7 var(--font-outlier);max-height:320px;overflow:auto;padding:var(--space-xs) var(--space-sm);border-top:var(--rule-hair) solid var(--color-rule);white-space:pre-wrap;color:var(--color-ink-2);overflow-wrap:anywhere}
+.loglines .error{color:var(--color-danger)}
+.loglines .ts{color:var(--color-muted)}
+.notice{border:var(--rule-hair) solid var(--color-rule-2);border-radius:var(--radius-card);padding:var(--space-sm) var(--space-md);display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap}
+.notice p{margin:0;flex:1;min-width:220px}
+.toast{position:fixed;bottom:var(--space-lg);left:50%;transform:translate(-50%,8px);opacity:0;background:var(--color-paper-3);border:var(--rule-hair) solid var(--color-rule-2);padding:var(--space-sm) var(--space-md);border-radius:var(--radius-card);z-index:40;max-width:min(560px,calc(100vw - 32px));transition:opacity var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out);pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.spin{display:inline-block;width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--color-rule-2);border-top:1.5px solid var(--color-accent);animation:spin .8s linear infinite;vertical-align:-1px}
+kbd{font:400 var(--text-xs) var(--font-outlier);border:var(--rule-hair) solid var(--color-rule-2);border-radius:4px;padding:0 5px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10}
+.top-in,.layout,.demo-strip{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.layout{padding-block:20px}
+.demo-strip{background:var(--color-paper-2);border-bottom:var(--rule-hair) solid var(--color-rule);color:var(--color-ink-2);font-size:var(--text-sm);padding-block:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.demo-strip a{color:var(--color-ink)}
+.top{top:env(safe-area-inset-top,0px)}
+body::before{background:var(--color-paper)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
-<div class="demo-strip"><b>Demo</b><span>Runs in this page with example data. Press <b>Resume</b> to let it work. AI answers come from Claude (allow it when asked); Chrome and SEO fetching are simulated.</span><a href="https://github.com/raoof-pixel/AgentJ" target="_blank" rel="noopener noreferrer">Get the real app on GitHub</a></div>
+<div class="demo-strip"><strong>Demo</strong><span>Example data in your browser. Press resume queue to let it work. Answers come from Claude (allow it when asked). Voice is typed here, and Chrome, desktop and SEO fetching are simulated.</span><a href="https://github.com/raoof-pixel/AgentJ" target="_blank" rel="noopener noreferrer">Get the real app on GitHub</a></div>
 
-<header>
-  <div class="logo"><span class="orb" id="orb"></span> AgentJ</div>
-  <div class="pills">
-    <span class="pill" id="pWorker"><span class="dot"></span>Worker</span>
-    <span class="pill" id="pAI"><span class="dot"></span>AI</span>
-    <span class="pill" id="pChrome"><span class="dot"></span>Chrome</span>
+<header class="top">
+  <div class="top-in">
+    <a class="mark" href="#today" aria-label="AgentJ home">agentj</a>
+    <button type="button" class="btn wake-toggle" id="wakeToggle" aria-pressed="false" title="Listen for the wake word">wake word off</button>
+    <div class="top-state">
+      <span class="readout" id="stAI">ai</span>
+      <span class="readout" id="stChrome">chrome</span>
+      <button type="button" class="btn btn--quiet" id="btnPause">pause queue</button>
+      <button type="button" class="btn btn--icon btn--quiet" id="btnSettings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
   </div>
-  <button class="mic" id="btnMic" title="Talk to AgentJ (Alt+J)">🎙</button>
-  <button class="ghost" id="btnPause">Pause</button>
-  <button id="btnSettings">Settings</button>
 </header>
 
-<div class="voicebar" id="voicebar"><div class="inner">
-  <span class="spinner" id="vSpin" style="display:none"></span>
-  <div class="heard" id="heard">Listening…</div>
-  <button class="ghost" id="vStop">Done</button>
-</div></div>
-
-<main>
-  <section>
-    <div class="card">
-      <div class="seg">
-        <button class="on" data-mode="one">One task</button>
-        <button data-mode="list">Paste to-do list</button>
-      </div>
-      <form id="formOne">
-        <textarea id="title" rows="3" placeholder="What should I do?  e.g. SEO audit of canadiansme.ca" required></textarea>
-        <label>Details / instructions (optional)</label>
-        <textarea id="details" rows="3" placeholder="Links, tone, what a good result looks like…"></textarea>
-        <label>Type</label>
-        <div class="chips" id="typeChips"></div>
-        <div class="row">
-          <div><label>Priority</label>
-            <select id="priority"><option value="1">High</option><option value="2" selected>Normal</option><option value="3">Low</option></select></div>
-          <div><label>Repeat</label>
-            <select id="repeat"><option value="">No</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></div>
+<main class="layout">
+  <!-- left: talk to it, and watch it work -->
+  <div class="col col--listen">
+    <section class="well blueprint listen" id="listen" data-mode="idle" aria-live="polite">
+      <h1 id="listenHead"><span class="verb">say</span> “agentj”</h1>
+      <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+      <div class="heard" id="heard">Turn on the wake word, then say “AgentJ, SEO audit of b2bprint.ca”. Or press <kbd>Alt</kbd> + <kbd>J</kbd> and just talk.</div>
+      <div class="reply" id="reply" hidden></div>
+      <form class="compose" id="compose">
+        <label class="sr" for="cmd">Tell AgentJ what to do</label>
+        <textarea id="cmd" name="cmd" rows="2" placeholder="Or type it. One task per line for a whole list." autocomplete="off"></textarea>
+        <details class="opts" id="opts">
+          <summary>more options</summary>
+          <div class="opts-grid">
+            <label class="field"><span>agent</span>
+              <select id="optType"><option value="auto">auto</option><option value="browser">chrome</option><option value="desktop">desktop</option><option value="seo">seo</option><option value="brainstorm">brainstorm</option><option value="research">research</option><option value="write">write</option></select></label>
+            <label class="field"><span>priority</span>
+              <select id="optPrio"><option value="1">high</option><option value="2" selected>normal</option><option value="3">low</option></select></label>
+            <label class="field"><span>repeat</span>
+              <select id="optRepeat"><option value="">no</option><option value="daily">daily</option><option value="weekdays">weekdays</option><option value="weekly">weekly</option></select></label>
+            <label class="field wide"><span>details</span><textarea id="optDetails" rows="2" placeholder="Links, tone, what a good result looks like"></textarea></label>
+          </div>
+        </details>
+        <div class="compose-actions">
+          <button type="button" class="btn" id="btnTalk" aria-label="Talk (Alt+J)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>talk
+          </button>
+          <span class="grow hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+          <button type="submit" class="btn btn--primary" id="btnAdd">add</button>
         </div>
-        <div style="margin-top:14px"><button class="primary" style="width:100%">Add task</button></div>
-        <div class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to add · or press <kbd>Alt</kbd>+<kbd>J</kbd> and just talk</div>
       </form>
-      <form id="formList" style="display:none">
-        <textarea id="listText" rows="10" placeholder="Paste your whole day:&#10;- brainstorm 10 YouTube video ideas for CanadianSME&#10;- SEO check b2bprint.ca homepage&#10;- open YouTube Studio and summarize last week's analytics"></textarea>
-        <div style="margin-top:12px"><button class="primary" style="width:100%" id="btnPlan">Split into tasks</button></div>
-        <div class="hint">AgentJ splits the list, picks the right agent and matches your playbooks.</div>
-      </form>
-    </div>
-    <div class="card" style="margin-top:16px">
-      <h2>Talk to it</h2>
-      <div class="hint" style="font-size:13px;line-height:1.8">
-        “Do an SEO audit of b2bprint.ca and brainstorm 5 blog ideas”<br>
-        “Run my YouTube comments playbook”<br>
-        “What's left?” · “Pause” · “Resume”<br>
-        Teach repeated tasks in <b>Playbooks</b> — just explain how you do it, out loud.
+    </section>
+
+    <section class="well blueprint run" id="run" aria-label="What AgentJ is doing now">
+      <div class="panel-head"><h2>now</h2><span class="readout" id="runState">idle</span></div>
+      <div id="runBody"><p class="muted" style="margin:0">Nothing running. Add a task or resume the queue.</p></div>
+    </section>
+  </div>
+
+  <!-- center: the day -->
+  <section class="col col--day" aria-label="Your day">
+    <div>
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button type="button" class="tab" role="tab" data-view="today" aria-selected="true">today</button>
+        <button type="button" class="tab" role="tab" data-view="everything" aria-selected="false">everything</button>
+        <button type="button" class="tab" role="tab" data-view="routines" aria-selected="false">routines</button>
       </div>
+      <div id="notice"></div>
+      <div id="view"><ul class="rows"><li class="skeleton"></li><li class="skeleton"></li><li class="skeleton"></li></ul></div>
     </div>
   </section>
 
-  <section>
-    <div class="banner" id="banner"></div>
-    <div class="tabs" id="tabs"></div>
-    <div id="view"></div>
+  <!-- right: what needs you -->
+  <section class="col col--review" aria-label="Needs your review">
+    <div>
+      <div class="panel-head" style="padding-bottom:var(--space-sm)"><h2>for you</h2><span class="count" id="reviewCount"></span></div>
+      <ul class="inbox" id="inbox"></ul>
+    </div>
   </section>
 </main>
 
-<!-- task drawer -->
-<div class="drawer" id="drawer"><div class="sheet">
-  <div class="sheet-head"><h3 id="dTitle"></h3><button class="ghost" onclick="closeDrawer()">✕</button></div>
+<!-- task sheet -->
+<div class="scrim" id="taskSheet"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+  <div class="sheet-head"><h2 id="tTitle"></h2><button type="button" class="btn btn--icon btn--quiet" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="sheet-body">
-    <div id="dMeta" style="color:var(--muted);font-size:12px;margin-bottom:10px"></div>
-    <div class="md" id="dDetails" style="color:var(--muted)"></div>
-    <div class="md" id="dResult"></div>
-    <details class="logs" id="dLogsWrap"><summary>Activity log</summary><div class="loglines" id="dLogs"></div></details>
+    <dl class="facts" id="tFacts"></dl>
+    <div class="md muted" id="tDetails"></div>
+    <div class="md" id="tResult"></div>
+    <details class="logs" id="tLogsWrap"><summary>activity log</summary><div class="loglines" id="tLogs"></div></details>
   </div>
-  <div class="sheet-foot" id="dFoot"></div>
+  <div class="sheet-foot" id="tFoot"></div>
 </div></div>
 
-<!-- playbook editor -->
-<div class="drawer modal" id="pbModal"><div class="sheet">
-  <div class="sheet-head"><h3 id="pbHead">New playbook</h3><button class="ghost" onclick="closePb()">✕</button></div>
+<!-- routine sheet -->
+<div class="scrim" id="pbSheet"><div class="sheet sheet--narrow" role="dialog" aria-modal="true" aria-labelledby="pbHead">
+  <div class="sheet-head"><h2 id="pbHead">new routine</h2><button type="button" class="btn btn--icon btn--quiet" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="sheet-body">
-    <label style="margin-top:0">Explain how you do this task (type, or press 🎙 and talk)</label>
-    <div class="row" style="align-items:flex-start">
-      <textarea id="pbExplain" rows="6" style="flex:1" placeholder="Every morning I open YouTube Studio, go to Comments, reply to new questions in a friendly tone, and note any that need me…"></textarea>
+    <label class="field"><span>explain how you do this task, the way you'd tell a new assistant</span>
+      <textarea id="pbExplain" rows="6" placeholder="Every weekday at 9:30 I open YouTube Studio, go to Comments, draft friendly replies to new questions and flag anything that needs me."></textarea></label>
+    <div style="display:flex;gap:var(--space-xs);flex-wrap:wrap">
+      <button type="button" class="btn" id="pbDictate">dictate</button>
+      <button type="button" class="btn" id="pbDraft">write the steps for me</button>
     </div>
-    <div style="margin-top:8px;display:flex;gap:8px">
-      <button id="pbDictate">🎙 Dictate</button>
-      <button id="pbDraft" class="primary">Turn into playbook ↓</button>
+    <h3>the routine</h3>
+    <label class="field"><span>name</span><input id="pb_name" autocomplete="off" placeholder="YouTube comments check"></label>
+    <label class="field"><span>phrases that start it (comma separated)</span><input id="pb_triggers" autocomplete="off" placeholder="youtube comments, reply to comments"></label>
+    <div class="grid3">
+      <label class="field"><span>agent</span><select id="pb_type"><option value="auto">auto</option><option value="browser">chrome</option><option value="desktop">desktop</option><option value="seo">seo</option><option value="brainstorm">brainstorm</option><option value="research">research</option><option value="write">write</option></select></label>
+      <label class="field"><span>runs</span><select id="pb_schedule"><option value="">when I ask</option><option value="daily">daily</option><option value="weekdays">weekdays</option><option value="weekly">weekly</option></select></label>
+      <label class="field"><span>at</span><input id="pb_run_time" type="time"></label>
     </div>
-    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
-    <label>Name</label><input id="pb_name" placeholder="YouTube comments check">
-    <label>Trigger phrases (comma separated – what you'll say)</label><input id="pb_triggers" placeholder="youtube comments, reply to comments">
-    <div class="row">
-      <div><label>Agent</label><select id="pb_type"><option value="auto">Auto</option><option value="browser">Browser (Chrome)</option><option value="seo">SEO</option><option value="brainstorm">Brainstorm</option><option value="research">Research</option><option value="write">Write</option></select></div>
-      <div><label>Run automatically</label><select id="pb_schedule"><option value="">Only when I ask</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></div>
-      <div><label>At</label><input id="pb_run_time" type="time"></div>
-    </div>
-    <label>Steps (the agent follows these exactly)</label>
-    <textarea id="pb_steps" rows="10"></textarea>
-    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pb_enabled" style="width:auto" checked> Enabled</label>
+    <label class="field"><span>steps the agent follows exactly</span><textarea id="pb_steps" rows="10"></textarea></label>
+    <label style="display:flex;gap:var(--space-xs);align-items:center"><input type="checkbox" id="pb_enabled" style="width:auto;min-height:0" checked> <span>on</span></label>
   </div>
   <div class="sheet-foot">
-    <button class="primary" id="pbSave">Save playbook</button>
-    <button id="pbRun">Save &amp; run now</button>
-    <button class="ghost danger" id="pbDelete" style="margin-left:auto">Delete</button>
+    <button type="button" class="btn btn--primary" id="pbSave">save routine</button>
+    <button type="button" class="btn" id="pbRun">save and run now</button>
+    <button type="button" class="btn btn--quiet btn--danger" id="pbDelete" style="margin-left:auto">delete</button>
   </div>
 </div></div>
 
-<!-- settings -->
-<div class="drawer modal" id="settings"><div class="sheet">
-  <div class="sheet-head"><h3>Settings</h3><button class="ghost" onclick="closeSettings()">✕</button></div>
+<!-- settings sheet -->
+<div class="scrim" id="setSheet"><div class="sheet sheet--narrow" role="dialog" aria-modal="true" aria-labelledby="setHead">
+  <div class="sheet-head"><h2 id="setHead">settings</h2><button type="button" class="btn btn--icon btn--quiet" data-close aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="sheet-body">
-    <h2>AI brain</h2>
-    <label>Text tasks use</label>
-    <select id="s_provider"><option value="gemini">Gemini (fast, recommended)</option><option value="ollama">Ollama (fully local, slower)</option></select>
-    <label>Gemini API key</label>
-    <input id="s_gemini_api_key" placeholder="Paste key from aistudio.google.com/apikey" autocomplete="off">
-    <label>Gemini model (leave empty = auto-pick newest Flash)</label>
-    <input id="s_gemini_model" placeholder="auto">
-    <label>Ollama URL / model</label>
-    <div class="row"><input id="s_ollama_url"><input id="s_ollama_model"></div>
-    <div style="margin-top:10px"><button id="btnTest">Test connection</button> <span id="testMsg" class="hint"></span></div>
+    <h3>voice</h3>
+    <div class="grid2">
+      <label class="field"><span>listening runs on</span><select id="s_voice_engine"><option value="local">this PC, offline (recommended)</option><option value="browser">Chrome's speech recognition</option></select></label>
+      <label class="field"><span>accuracy</span><select id="s_whisper_model"><option value="tiny">fastest</option><option value="base">balanced</option><option value="small">most accurate, slower</option></select></label>
+    </div>
+    <div class="grid2">
+      <label class="field"><span>AgentJ's voice</span><select id="s_tts_voice"><option value="af_heart">Heart (warm, female)</option><option value="af_bella">Bella (female)</option><option value="am_michael">Michael (male)</option><option value="am_fenrir">Fenrir (deep male)</option><option value="bf_emma">Emma (British female)</option><option value="bm_george">George (British male)</option></select></label>
+      <label class="field"><span>Chrome wake words (only used with Chrome's speech)</span><input id="s_wake_words" autocomplete="off"></label>
+    </div>
+    <div class="grid2">
+      <label class="field"><span>language</span><select id="s_voice_lang"><option value="en-IN">English (India)</option><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="en-CA">English (Canada)</option><option value="hi-IN">Hindi</option><option value="te-IN">Telugu</option><option value="ur-IN">Urdu</option></select></label>
+      <label class="field"><span>answer out loud</span><select id="s_speak_replies"><option value="1">yes</option><option value="0">no</option></select></label>
+    </div>
+    <label class="field"><span>ping me when something is ready</span><select id="s_notify"><option value="1">yes, chime and desktop notification</option><option value="0">no</option></select></label>
+    <p class="hint" style="margin:0">On this PC, the wake word, Whisper and AgentJ's voice all run offline: no audio leaves your computer. With Chrome's speech, the audio goes to Google, and while the wake word is on it listens all the time.</p>
 
-    <h2 style="margin-top:24px">Chrome</h2>
-    <label>Chrome tasks use</label>
-    <select id="s_chrome_mode">
-      <option value="own">My own Chrome, while I use it (recommended)</option>
-      <option value="cdp">A separate Jarvis Chrome window (start-jarvis-chrome.bat)</option>
-      <option value="system">My main profile, launched by AgentJ (Chrome must be closed)</option>
-    </select>
-    <div class="hint">For “My own Chrome”: open <b>chrome://inspect/#remote-debugging</b> in Chrome once and switch it ON. Chrome asks you to <b>Allow</b> each time a task starts.</div>
-    <label>Browser agent brain</label>
-    <select id="s_browser_provider"><option value="gemini">Gemini (recommended)</option><option value="ollama">Ollama (often fails on small models)</option></select>
-    <div class="row">
-      <div><label>Jarvis window address</label><input id="s_chrome_cdp_url"></div>
-      <div><label>Main profile folder</label><input id="s_chrome_profile"></div>
-      <div><label>Max steps</label><input id="s_browser_max_steps"></div>
+    <h3>ai</h3>
+    <div class="grid2">
+      <label class="field"><span>text tasks use</span><select id="s_provider"><option value="gemini">Gemini, fast</option><option value="ollama">Ollama, fully local</option></select></label>
+      <label class="field"><span>Chrome tasks use</span><select id="s_browser_provider"><option value="gemini">Gemini</option><option value="ollama">Ollama (often fails)</option></select></label>
+    </div>
+    <label class="field"><span>Gemini API key</span><input id="s_gemini_api_key" autocomplete="off" placeholder="Paste a free key from aistudio.google.com/apikey"></label>
+    <div class="grid2">
+      <label class="field"><span>Gemini model (empty picks the newest Flash)</span><input id="s_gemini_model" autocomplete="off" placeholder="auto"></label>
+      <label class="field"><span>Ollama model</span><input id="s_ollama_model" autocomplete="off"></label>
+    </div>
+    <label class="field"><span>Ollama address</span><input id="s_ollama_url" autocomplete="off"></label>
+    <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="btnTest">test connection</button><span class="hint" id="testMsg"></span></div>
+
+    <h3>chrome</h3>
+    <label class="field"><span>Chrome tasks run in</span><select id="s_chrome_mode">
+      <option value="own">my own Chrome, while I use it</option>
+      <option value="cdp">a separate Jarvis Chrome window</option>
+      <option value="system">my main profile, with Chrome closed</option></select></label>
+    <p class="hint" style="margin:0">For your own Chrome: open chrome://inspect/#remote-debugging once and switch it on. Chrome asks you to allow each task.</p>
+    <label class="field"><span>sites the Chrome agent may open (empty means any)</span><input id="s_browser_allowed_domains" autocomplete="off" placeholder="youtube.com, *.youtube.com, *.google.com, canadiansme.ca, b2bprint.ca"></label>
+    <div class="grid3">
+      <label class="field"><span>Jarvis window address</span><input id="s_chrome_cdp_url" autocomplete="off"></label>
+      <label class="field"><span>main profile folder</span><input id="s_chrome_profile" autocomplete="off"></label>
+      <label class="field"><span>max steps</span><input id="s_browser_max_steps" inputmode="numeric" autocomplete="off"></label>
     </div>
 
-    <label>Sites the Chrome agent may open (optional, comma separated – empty = any site)</label>
-    <input id="s_browser_allowed_domains" placeholder="youtube.com, *.youtube.com, *.google.com, canadiansme.ca, b2bprint.ca">
-    <div class="hint">Safer: a web page can't lure the agent onto your bank or email if they're not on this list.</div>
+    <h3>desktop</h3>
+    <p class="hint" style="margin:0">Desktop tasks move your mouse and keyboard. Fling the mouse into the top-left corner of the screen to stop one instantly.</p>
+    <label class="field"><span>max steps per desktop task</span><input id="s_desktop_max_steps" inputmode="numeric" autocomplete="off"></label>
 
-    <h2 style="margin-top:24px">Voice</h2>
-    <div class="row">
-      <div><label>Language</label>
-        <select id="s_voice_lang"><option value="en-IN">English (India)</option><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="en-CA">English (Canada)</option><option value="hi-IN">Hindi</option><option value="te-IN">Telugu</option><option value="ur-IN">Urdu</option></select></div>
-      <div><label>Speak replies out loud</label><select id="s_speak_replies"><option value="1">Yes</option><option value="0">No</option></select></div>
-    </div>
-
-    <h2 style="margin-top:24px">About you</h2>
-    <textarea id="s_about_me" rows="6" placeholder="Your businesses, websites, YouTube channels, audience, tone of voice… Every agent reads this."></textarea>
-    <div class="hint">Saved only on this computer (data/agentj.db).</div>
+    <h3>about you</h3>
+    <label class="field"><span>your businesses, sites, channels, audience and tone. Every agent reads this.</span><textarea id="s_about_me" rows="6"></textarea></label>
+    <p class="hint" style="margin:0">Stored only on this computer, in data/agentj.db.</p>
   </div>
-  <div class="sheet-foot"><button class="primary" id="btnSave">Save</button></div>
+  <div class="sheet-foot"><button type="button" class="btn btn--primary" id="btnSave">save settings</button></div>
 </div></div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status"></div>
 
 
 
@@ -281,7 +396,7 @@ main{padding-block:20px}
   const nowISO = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   const today = () => nowISO().slice(0, 10);
   const ago = mins => nowISO(new Date(Date.now() - mins * 60000));
-  const TYPES = ["auto", "brainstorm", "seo", "browser", "research", "write"];
+  const TYPES = ["auto", "brainstorm", "seo", "browser", "desktop", "research", "write"];
   const REPEATS = ["", "daily", "weekdays", "weekly"];
 
   let nextId = 1, nextPb = 1;
@@ -292,7 +407,8 @@ main{padding-block:20px}
       ollama_model: "qwen3:4b", browser_provider: "gemini", chrome_mode: "own", chrome_cdp_url: "http://127.0.0.1:9222",
       chrome_profile: "Default", browser_max_steps: "25", browser_allowed_domains: "youtube.com, *.youtube.com, *.google.com",
       about_me: "Runs CanadianSME (canadiansme.ca), a small-business magazine, and is launching B2Bprint.ca (online print store).",
-      worker_paused: "0", speak_replies: "1", voice_lang: "en-IN",
+      worker_paused: "0", speak_replies: "1", voice_lang: "en-IN", wake_words: "agentj, agent j, agent jay", notify: "1",
+      voice_engine: "local", whisper_model: "base", tts_voice: "af_heart", desktop_max_steps: "20",
     },
   };
 
@@ -325,6 +441,7 @@ main{padding-block:20px}
   const KEYWORDS = [
     ["seo", /\bseo\b|site audit|meta (title|description)|page ?speed|backlink|keyword rank/],
     ["brainstorm", /brain ?storm|\bideas\b|name ideas|\bangles\b/],
+    ["desktop", /\bdesktop\b|my (pc|computer|laptop|screen)|\bexcel\b|word doc|powerpoint|file explorer|\bfolder\b|notepad/],
     ["browser", /youtube|\bchrome\b|go to |open (the )?(site|website|page)|log ?in|upload|search console|analytics|click|subscribe|comment on|reply to|check my (channel|inbox|dashboard)/],
     ["research", /research|find out|compare|latest|news|competitor|look up|what is|who is/],
     ["write", /\bwrite\b|draft|email|caption|post|article|blog|script|copy\b|rewrite|summari[sz]e/],
@@ -380,6 +497,7 @@ main{padding-block:20px}
     let kind = t.type !== "auto" ? t.type : (pb && pb.type !== "auto" ? pb.type : (t.resolved_type || classify(t)));
     update(t, { resolved_type: kind }); log(t.id, `Agent selected: ${kind}`);
     if (kind === "browser") return browserDemo(t, pb);
+    if (kind === "desktop") return desktopDemo(t);
     if (kind === "seo") return seoDemo(t);
     log(t.id, kind === "research" ? "Researching…" : kind === "brainstorm" ? "Brainstorming…" : "Working on it…");
     const out = await ask(context(t) + "\n\n" + GUIDES[kind]);
@@ -395,6 +513,13 @@ main{padding-block:20px}
     for (const s of steps) { log(t.id, s, "browser"); await sleep(900); if (t.status !== "running") return ""; }
     const plan = await ask(context(t) + "\n\nThis is a DEMO: you cannot browse. Write what the AgentJ Chrome agent would do for this task in the user's own Chrome: a numbered list of concrete browser steps (sites, pages, buttons), then a short example of the report it would hand back (clearly marked as an example). Remind that it stops with NEEDS APPROVAL before any post/send/publish.", { modelTier: "quick" });
     return `> **Demo:** in the real app this runs in your own Chrome and reports what it actually found.\n\n${plan || canned("browser", t) + NO_AI}`;
+  }
+  async function desktopDemo(t) {
+    for (const s of ["Taking over the desktop. Fling the mouse to the top-left corner to stop me.", "Step 1: screenshot read, pressing the Windows key", "Step 2: typing the app name", "Step 3: working in the app"]) {
+      log(t.id, s, "browser"); await sleep(900); if (t.status !== "running") return "";
+    }
+    const plan = await ask(context(t) + "\n\nThis is a DEMO: you cannot see or control the PC. List the concrete desktop steps AgentJ's desktop agent would take on Windows (apps, clicks, keys), then a short example of the summary it would report, clearly marked as an example.", { modelTier: "quick" });
+    return `> **Demo:** in the real app this moves your mouse and keyboard on your PC, step by step.\n\n${plan || "1. Press the Windows key and open Excel\n2. Open the file\n3. Select column B and read the sum in the status bar\n\nExample report: the total is shown in the status bar." + NO_AI}`;
   }
   async function seoDemo(t) {
     const m = `${t.title} ${t.details}`.match(/(https?:\/\/[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|ca|org|net|io|ai|co|in|store|dev)\b)/i);
@@ -448,6 +573,10 @@ main{padding-block:20px}
     if (!low) return { reply: "I didn't catch that.", created: [] };
     if (/\b(pause|stop working|hold on)\b/.test(low) && low.length < 40) { S.settings.worker_paused = "1"; return { reply: "Paused. Say resume when you want me to continue.", created: [] }; }
     if (/\b(resume|continue|start working|carry on)\b/.test(low) && low.length < 40) { S.settings.worker_paused = "0"; return { reply: "Resuming the queue.", created: [] }; }
+    if (/\b(brief me|briefing|plan (?:for )?my day|my day|good morning)\b/.test(low) && low.length < 60) {
+      const rv = S.tasks.filter(t => t.status === "review"), q = S.tasks.filter(t => t.status === "queued");
+      return { reply: `Here's your day. ${rv.length} waiting for your review${rv[0] ? ", starting with " + rv[0].title : ""}. ${q.length} queued.`, created: [] };
+    }
     if (/\b(status|what(?:'s|s| is) (?:left|pending|remaining)|anything left|how many tasks|what are you (?:doing|working on))\b/.test(low) && low.length < 60) {
       const c = s => S.tasks.filter(t => t.status === s).length; const cur = S.current && getTask(S.current);
       return { reply: `${c("queued")} queued, ${c("review")} waiting for your review, ${c("failed")} failed.${cur ? " I'm working on: " + cur.title + "." : ""}`, created: [] };
@@ -476,7 +605,8 @@ main{padding-block:20px}
       if (path === "/api/playbooks") return json([...S.playbooks].sort((a, c) => a.name.localeCompare(c.name)));
       if (path === "/api/settings") return json(S.settings);
       if (path === "/api/status") return json({ current: S.current, paused: S.settings.worker_paused === "1", provider: S.settings.provider, has_key: true,
-        chrome: "your Chrome (demo)", chrome_mode: S.settings.chrome_mode, speak: S.settings.speak_replies === "1", voice_lang: S.settings.voice_lang });
+        chrome: "your chrome (demo)", chrome_mode: S.settings.chrome_mode, speak: S.settings.speak_replies === "1", voice_lang: S.settings.voice_lang,
+        wake_words: "agentj, agent j", notify: true, voice: { engine: "demo" } });
       return json({ error: "not found" }, 404);
     }
     if (path === "/api/tasks") {
@@ -542,14 +672,15 @@ main{padding-block:20px}
   const t3 = createTask("YouTube comments check", "", "browser", 2, "", "", yt.id);
   log(t3.id, "Created automatically by the 'YouTube comments check' playbook schedule");
   createTask("SEO audit of b2bprint.ca homepage", "", "auto", 2);
+  createTask("Open Excel on my PC and total the September sponsorship sheet", "", "desktop", 3);
   S.settings.worker_paused = "1"; // start paused so the visitor sees the queue; they press Resume
   window.__agentjDemo = { S };
 })();
 </script>
 <script>
-const TYPES=[["auto","Auto"],["brainstorm","Brainstorm"],["seo","SEO"],["browser","Browser"],["research","Research"],["write","Write"]];
-const TABS=[["today","Today"],["review","Needs review"],["active","Queue"],["done","Done"],["failed","Failed"],["playbooks","Playbooks"]];
-let state={tasks:[],playbooks:[],tab:"today",type:"auto",openId:null,openSig:null,status:{},editingPb:null};
+const TABS=["today","everything","routines"];
+const KIND={browser:"chrome",desktop:"desktop",seo:"seo",brainstorm:"brainstorm",research:"research",write:"write",auto:"auto"};
+let state={tasks:[],playbooks:[],status:{},view:"today",loaded:false,error:false,openId:null,openSig:null,editingPb:null,prevStatus:{}};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -558,303 +689,476 @@ async function api(path,opts={}){
   return r.json();
 }
 const post=(p,b={})=>api(p,{method:"POST",body:b});
-function toast(msg){const t=$("#toast");t.textContent=msg;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",3500);}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),3600);}
 const todayISO=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);};
+const kindOf=t=>KIND[t.type==="auto"?(t.resolved_type||"auto"):t.type]||t.type;
+const pbName=id=>{const p=state.playbooks.find(p=>p.id===id);return p?p.name:"";};
+function timeOf(ts){if(!ts)return"";const d=new Date(ts);return d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+function whenOf(ts){if(!ts)return"";const d=new Date(ts);return (ts.slice(0,10)===todayISO())?timeOf(ts):d.toLocaleDateString([],{month:"short",day:"numeric"});}
+function plain(md){return String(md||"").replace(/```[\s\S]*?```/g," ").replace(/[#>*_`|]/g," ").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1").replace(/\s+/g," ").trim();}
 
-/* ---------- tiny safe markdown (escapes everything first) ---------- */
+/* ---------- safe markdown: everything is escaped first ---------- */
 function inline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
-    .replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<em>$2</em>")
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/(^|[\s(])(https?:\/\/[^\s<)"]+)/g,'$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
 }
 function md(src){
   const lines=esc(src||"").split("\n");let out=[],list=null,code=false,buf=[];
-  const closeList=()=>{if(list){out.push(`</${list}>`);list=null;}};
+  const close=()=>{if(list){out.push(`</${list}>`);list=null;}};
   for(let i=0;i<lines.length;i++){
-    const l=lines[i];
-    if(l.trim().startsWith("```")){if(code){out.push(`<pre><code>${buf.join("\n")}</code></pre>`);buf=[];code=false;}else{closeList();code=true;}continue;}
+    const l=lines[i];let m;
+    if(l.trim().startsWith("```")){if(code){out.push(`<pre><code>${buf.join("\n")}</code></pre>`);buf=[];code=false;}else{close();code=true;}continue;}
     if(code){buf.push(l);continue;}
-    let m;
-    if((m=l.match(/^(#{1,4})\s+(.*)/))){closeList();out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`);continue;}
-    if(/^\s*(---|\*\*\*)\s*$/.test(l)){closeList();out.push("<hr>");continue;}
-    if((m=l.match(/^\s*[-*•]\s+(.*)/))){if(list!=="ul"){closeList();out.push("<ul>");list="ul";}out.push(`<li>${inline(m[1])}</li>`);continue;}
-    if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=="ol"){closeList();out.push("<ol>");list="ol";}out.push(`<li>${inline(m[1])}</li>`);continue;}
-    if((m=l.match(/^&gt;\s?(.*)/))){closeList();out.push(`<blockquote>${inline(m[1])}</blockquote>`);continue;}
+    if((m=l.match(/^(#{1,4})\s+(.*)/))){close();const n=Math.min(4,m[1].length+2);out.push(`<h${n}>${inline(m[2])}</h${n}>`);continue;}
+    if(/^\s*(---|\*\*\*)\s*$/.test(l)){close();out.push("<hr>");continue;}
+    if((m=l.match(/^\s*[-*•]\s+(.*)/))){if(list!=="ul"){close();out.push("<ul>");list="ul";}out.push(`<li>${inline(m[1])}</li>`);continue;}
+    if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=="ol"){close();out.push("<ol>");list="ol";}out.push(`<li>${inline(m[1])}</li>`);continue;}
+    if((m=l.match(/^&gt;\s?(.*)/))){close();out.push(`<blockquote>${inline(m[1])}</blockquote>`);continue;}
     if(/^\s*\|.*\|\s*$/.test(l)){
-      closeList();const rows=[l];while(i+1<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i+1]))rows.push(lines[++i]);
+      close();const rows=[l];while(i+1<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i+1]))rows.push(lines[++i]);
       const cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
       const body=rows.filter(r=>!/^\s*\|[\s:|-]+\|\s*$/.test(r));
-      out.push("<table>"+body.map((r,ix)=>"<tr>"+cells(r).map(c=>ix===0?`<th>${inline(c)}</th>`:`<td>${inline(c)}</td>`).join("")+"</tr>").join("")+"</table>");
+      out.push('<div class="tablewrap"><table>'+body.map((r,ix)=>"<tr>"+cells(r).map(c=>ix===0?`<th>${inline(c)}</th>`:`<td>${inline(c)}</td>`).join("")+"</tr>").join("")+"</table></div>");
       continue;
     }
-    if(!l.trim()){closeList();out.push("");continue;}
-    closeList();out.push(`<p>${inline(l)}</p>`);
+    if(!l.trim()){close();continue;}
+    close();out.push(`<p>${inline(l)}</p>`);
   }
   if(code)out.push(`<pre><code>${buf.join("\n")}</code></pre>`);
-  closeList();return out.join("\n");
+  close();return out.join("\n");
 }
 
-/* ---------- voice ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null,listening=false,voiceTarget=null,finalText="";
+/* ---------- sound + notifications ---------- */
+let audioCtx=null;
+function chime(up=true){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const now=audioCtx.currentTime;
+    (up?[660,880]:[740,560]).forEach((f,i)=>{
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0,now+i*.09);g.gain.linearRampToValueAtTime(.08,now+i*.09+.02);g.gain.exponentialRampToValueAtTime(.0001,now+i*.09+.25);
+      o.connect(g).connect(audioCtx.destination);o.start(now+i*.09);o.stop(now+i*.09+.3);
+    });
+  }catch(e){}
+}
 function speak(text){
-  if(!state.status.speak||!window.speechSynthesis||!text)return;
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=state.status.voice_lang||"en-IN";u.rate=1.05;speechSynthesis.speak(u);
+  if(!state.status.speak||(state.status.voice&&state.status.voice.tts)||!window.speechSynthesis||!text)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=state.status.voice_lang||"en-IN";u.rate=1.05;speechSynthesis.speak(u);}catch(e){}
 }
-function startListening(target){
-  if(!SR){toast("Voice needs Google Chrome or Edge.");return;}
-  if(listening){stopListening();return;}
-  voiceTarget=target||null;finalText="";
-  rec=new SR();rec.lang=state.status.voice_lang||"en-IN";rec.interimResults=true;rec.continuous=true;
-  rec.onresult=e=>{
-    let interim="";
-    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)finalText+=r[0].transcript+" ";else interim+=r[0].transcript;}
-    const shown=(finalText+interim).trim();
-    if(voiceTarget){voiceTarget.value=(voiceTarget.dataset.before||"")+shown;}
-    else $("#heard").textContent=shown||"Listening…";
+function notifyReady(t){
+  if(!state.status.notify)return;
+  chime(true);
+  if(document.hidden&&"Notification" in window&&Notification.permission==="granted"){
+    try{const n=new Notification("AgentJ: ready for review",{body:t.title,tag:"agentj-"+t.id});n.onclick=()=>{window.focus();openTask(t.id);};}catch(e){}
+  }
+}
+
+/* ---------- voice: wake word + push to talk ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const Voice={on:false,mode:"idle",rec:null,timer:null,restartDelay:250,stream:null,raf:null,keepAlive:false};
+function wakeRe(){
+  const words=(state.status.wake_words||"agentj, agent j, agent jay").split(",").map(w=>w.trim().toLowerCase()).filter(Boolean)
+    .sort((a,b)=>b.length-a.length).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"[\\s.,-]*"));
+  return new RegExp("(?:^|\\b)(?:hey\\s+|ok\\s+|okay\\s+)?(?:"+words.join("|")+")\\b[\\s,.!?:-]*","i");
+}
+function setMode(mode,head,heard){
+  Voice.mode=mode;const L=$("#listen");L.dataset.mode=mode;
+  const H={idle:'<span class="verb">say</span> “agentj”',awake:"listening",thinking:"on it",off:'<span class="verb">say</span> “agentj”'};
+  $("#listenHead").innerHTML=head||H[mode]||H.idle;
+  if(heard!==undefined)$("#heard").textContent=heard;
+  if(mode==="awake")startMeter();else stopMeter();
+}
+function idleHint(){return Voice.on?"Listening for “AgentJ”. Say it, then what you need.":"Turn on the wake word, or press Alt + J and talk.";}
+async function startMeter(){
+  try{
+    if(!Voice.stream)Voice.stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(Voice.stream),an=audioCtx.createAnalyser();an.fftSize=512;src.connect(an);
+    const data=new Uint8Array(an.fftSize);
+    const loop=()=>{an.getByteTimeDomainData(data);let peak=0;for(const v of data)peak=Math.max(peak,Math.abs(v-128));
+      $("#meter").style.setProperty("--lvl",Math.min(1,peak/50).toFixed(2));Voice.raf=requestAnimationFrame(loop);};
+    cancelAnimationFrame(Voice.raf);loop();
+  }catch(e){}
+}
+function stopMeter(){cancelAnimationFrame(Voice.raf);$("#meter").style.setProperty("--lvl",0);}
+function ensureRec(){
+  if(!SR){toast("Voice needs Google Chrome or Microsoft Edge.");return false;}
+  if(Voice.rec)return true;
+  const rec=new SR();rec.lang=state.status.voice_lang||"en-IN";rec.continuous=true;rec.interimResults=true;
+  rec.onresult=onResult;
+  rec.onerror=e=>{
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){toast("Microphone is blocked. Allow it from the icon in the address bar.");setWake(false);Voice.keepAlive=false;}
+    else if(e.error==="network"){Voice.restartDelay=Math.min(10000,Voice.restartDelay*2);}
   };
-  rec.onerror=e=>{if(e.error==="not-allowed")toast("Microphone blocked – allow it in the address bar.");else if(e.error!=="no-speech")toast("Voice error: "+e.error);};
-  rec.onend=()=>{const was=listening;listening=false;$("#btnMic").classList.remove("on");$("#pbDictate").textContent="🎙 Dictate";if(was)handleSpeech();};
-  if(voiceTarget){voiceTarget.dataset.before=voiceTarget.value?voiceTarget.value.trimEnd()+" ":"";$("#pbDictate").textContent="■ Stop";}
-  else{$("#voicebar").style.display="block";$("#heard").textContent="Listening… speak your tasks, then click Done";$("#vSpin").style.display="none";}
-  listening=true;$("#btnMic").classList.toggle("on",!voiceTarget);rec.start();
+  rec.onend=()=>{Voice.rec=null;if(Voice.on||Voice.keepAlive)setTimeout(()=>{if((Voice.on||Voice.keepAlive)&&!Voice.rec){ensureRec()&&startRec();}},Voice.restartDelay);};
+  Voice.rec=rec;return true;
 }
-function stopListening(){if(rec){rec.stop();}}
-async function handleSpeech(){
-  const text=finalText.trim();
-  if(voiceTarget){voiceTarget=null;return;}
-  if(!text){$("#voicebar").style.display="none";return;}
-  $("#heard").textContent="“"+text+"”";$("#vSpin").style.display="inline-block";
-  const r=await post("/api/voice",{text});
-  $("#vSpin").style.display="none";$("#heard").textContent=r.reply||"Done.";speak(r.reply);
-  setTimeout(()=>{$("#voicebar").style.display="none";},4000);
-  if(r.created&&r.created.length){state.tab="today";}
-  refresh();
+function startRec(){try{Voice.rec.start();Voice.restartDelay=250;}catch(e){}}
+function stopRec(){Voice.keepAlive=false;if(Voice.rec){try{Voice.rec.stop();}catch(e){}}}
+function onResult(e){
+  for(let i=e.resultIndex;i<e.results.length;i++){
+    const r=e.results[i],text=r[0].transcript.trim();if(!text)continue;
+    if(Voice.mode==="dictate"){if(r.isFinal){const t=Voice.target;t.value=(t.value?t.value.trimEnd()+" ":"")+text;}continue;}
+    const re=wakeRe(),m=text.match(re);
+    if(Voice.mode==="idle"){
+      if(!m)continue;
+      const after=text.slice(m.index+m[0].length).trim();
+      if(!r.isFinal){setMode("awake",null,after||"…");chime(true);Voice.chimed=true;armTimeout();continue;}
+      if(!Voice.chimed)chime(true);Voice.chimed=false;
+      if(after.length>2)return submitSpoken(after);
+      setMode("awake",null,"…");armTimeout();continue;
+    }
+    if(Voice.mode==="awake"){
+      const cmd=(m?text.slice(m.index+m[0].length):text).trim();
+      $("#heard").textContent=cmd||"…";
+      if(r.isFinal&&cmd.length>1){Voice.chimed=false;return submitSpoken(cmd);}
+      armTimeout();
+    }
+  }
 }
-$("#btnMic").onclick=()=>startListening(null);
-$("#vStop").onclick=()=>{if(listening)stopListening();else $("#voicebar").style.display="none";};
+function armTimeout(){clearTimeout(Voice.timer);Voice.timer=setTimeout(()=>{if(Voice.mode==="awake"){chime(false);setMode("idle",null,idleHint());if(!Voice.on)stopRec();}},9000);}
+async function submitSpoken(text){
+  clearTimeout(Voice.timer);
+  if(/^(never ?mind|cancel|nothing|stop)\b/i.test(text)){chime(false);setMode("idle",null,idleHint());if(!Voice.on)stopRec();return;}
+  setMode("thinking",null,"“"+text+"”");
+  if(!Voice.on)stopRec();
+  await sendCommand(text,true);
+}
+async function sendCommand(text,spoken){
+  try{
+    const r=await post("/api/voice",{text});
+    showReply(r.reply||"Done.");if(spoken)speak(r.reply);
+    if(r.created&&r.created.length)setView("today");
+  }catch(e){showReply("Can't reach AgentJ. Is start.bat still running?");}
+  setMode("idle",null,idleHint());refresh();
+}
+function showReply(text){const el=$("#reply");el.textContent=text;el.hidden=false;clearTimeout(el._h);el._h=setTimeout(()=>{el.hidden=true;},12000);}
+function pushToTalk(){
+  if(Voice.mode==="awake"){chime(false);setMode("idle",null,idleHint());if(!Voice.on)stopRec();return;}
+  if(!ensureRec())return;
+  Voice.keepAlive=true;if(!Voice.on)startRec();
+  chime(true);setMode("awake",null,"…");armTimeout();
+}
+function setWake(on){
+  Voice.on=on;const b=$("#wakeToggle");b.setAttribute("aria-pressed",on?"true":"false");
+  b.textContent=on?"listening for agentj":"wake word off";
+  try{localStorage.setItem("agentj-wake",on?"1":"0");}catch(e){}
+  if(on){if(ensureRec())startRec();if("Notification" in window&&Notification.permission==="default"&&state.status.notify)Notification.requestPermission().catch(()=>{});}
+  else{if(Voice.mode!=="awake")stopRec();}
+  if(Voice.mode==="idle")$("#heard").textContent=idleHint();
+}
+/* local engine: the listening happens in AgentJ itself (offline wake word + Whisper + Kokoro) */
+const isLocal=()=>state.status.voice&&state.status.voice.engine==="local";
+let lv={state:"off",reply:"",polling:false};
+function applyLocal(v){
+  const b=$("#wakeToggle");b.setAttribute("aria-pressed",v.wake_on?"true":"false");
+  b.textContent=v.state==="loading"?"waking up":(v.wake_on?"listening for agentj":"wake word off");
+  const map={awake:"awake",thinking:"thinking",speaking:"thinking"};
+  const L=$("#listen");L.dataset.mode=map[v.state]||"idle";
+  const heads={awake:"listening",thinking:"on it",speaking:"talking",loading:"waking up",error:"voice problem"};
+  $("#listenHead").innerHTML=heads[v.state]||'<span class="verb">say</span> “agentj”';
+  $("#meter").style.setProperty("--lvl",v.state==="awake"?String(v.level||0):"0");
+  if(v.state==="awake")$("#heard").textContent=v.heard||"…";
+  else if(v.state==="thinking"||v.state==="speaking")$("#heard").textContent=v.heard?"“"+v.heard+"”":"…";
+  else if(v.state==="error")$("#heard").textContent=v.error||"The microphone isn't available.";
+  else if(lv.state!==v.state)$("#heard").textContent=v.wake_on?"Listening for “AgentJ”, offline on this PC. Say it, then what you need.":"Turn on the wake word, or press Alt + J and talk.";
+  if(v.reply&&v.reply!==lv.reply){showReply(v.reply);refresh();}
+  if(lv.state!=="awake"&&v.state==="awake")chime(true);
+  lv={state:v.state,reply:v.reply};
+}
+async function pollLocal(){
+  if(lv.polling)return;lv.polling=true;
+  while(isLocal()){
+    try{const v=await api("/api/voice/state");if(v.engine!=="local")break;applyLocal(v);}catch(e){}
+    await new Promise(r=>setTimeout(r,["awake","thinking","speaking","loading"].includes(lv.state)?250:1200));
+  }
+  lv.polling=false;
+}
+$("#wakeToggle").onclick=async()=>{
+  if(isLocal()){const v=await post("/api/voice/wake",{on:!state.status.voice.wake_on});state.status.voice=v;applyLocal(v);pollLocal();return;}
+  setWake(!Voice.on);
+};
+$("#btnTalk").onclick=()=>{if(isLocal()){post("/api/voice/ptt").then(v=>{applyLocal(v);pollLocal();});return;}pushToTalk();};
 document.addEventListener("keydown",e=>{
-  if(e.altKey&&(e.key==="j"||e.key==="J")){e.preventDefault();startListening(null);}
-  if(e.key==="Escape"){closeDrawer();closeSettings();closePb();}
+  if(e.altKey&&(e.key==="j"||e.key==="J")){e.preventDefault();$("#btnTalk").click();}
+  else if(e.key==="Escape"){closeAll();}
+  else if((e.key==="/"||(e.key==="k"&&(e.ctrlKey||e.metaKey)))&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("#cmd").focus();}
 });
 
-/* ---------- composer ---------- */
-function renderChips(){$("#typeChips").innerHTML=TYPES.map(([k,v])=>`<button type="button" class="chip ${state.type===k?"on":""}" data-t="${k}">${v}</button>`).join("");}
-$("#typeChips").onclick=e=>{const t=e.target.dataset.t;if(t){state.type=t;renderChips();}};
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));
-  $("#formOne").style.display=b.dataset.mode==="one"?"":"none";
-  $("#formList").style.display=b.dataset.mode==="list"?"":"none";
-});
-$("#formOne").onsubmit=async e=>{
-  e.preventDefault();const title=$("#title").value.trim();if(!title)return;
-  const t=await post("/api/tasks",{title,details:$("#details").value,type:state.type,priority:+$("#priority").value,repeat:$("#repeat").value});
-  $("#title").value="";$("#details").value="";state.tab="today";
-  toast(t.playbook_id?"Task added (using your playbook)":"Task added");refresh();
+/* ---------- compose ---------- */
+function optsUsed(){return $("#opts").open&&($("#optType").value!=="auto"||$("#optPrio").value!=="2"||$("#optRepeat").value||$("#optDetails").value.trim());}
+$("#compose").onsubmit=async e=>{
+  e.preventDefault();const text=$("#cmd").value.trim();if(!text)return;
+  const b=$("#btnAdd");b.disabled=true;b.innerHTML='<span class="spin"></span> adding';
+  try{
+    if(optsUsed()){
+      await post("/api/tasks",{title:text,details:$("#optDetails").value,type:$("#optType").value,priority:+$("#optPrio").value,repeat:$("#optRepeat").value});
+      toast("Task added");$("#optDetails").value="";
+    }else if(text.includes("\n")){
+      const made=await post("/api/plan",{text});toast(`${made.length} tasks added`);
+    }else{
+      const r=await post("/api/voice",{text});showReply(r.reply||"Done.");
+    }
+    $("#cmd").value="";setView("today");
+  }catch(err){toast("Can't reach AgentJ. Is start.bat still running?");}
+  b.disabled=false;b.textContent="add";refresh();
 };
-$("#formOne").onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))$("#formOne").requestSubmit();};
-$("#formList").onsubmit=async e=>{
-  e.preventDefault();const text=$("#listText").value.trim();if(!text)return;
-  const b=$("#btnPlan");b.disabled=true;b.innerHTML='<span class="spinner"></span> Splitting…';
-  const made=await post("/api/plan",{text});
-  b.disabled=false;b.textContent="Split into tasks";$("#listText").value="";state.tab="today";
-  toast(`${made.length} tasks added`);refresh();
-};
+$("#cmd").onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();$("#compose").requestSubmit();}};
 
 /* ---------- views ---------- */
-function bucket(t){return t.status==="review"?"review":(t.status==="queued"||t.status==="running")?"active":t.status==="done"?"done":t.status==="cancelled"?"cancelled":"failed";}
-function isToday(t){
-  const today=todayISO();
-  if(t.status==="queued"||t.status==="running"||t.status==="review")return !t.due_date||t.due_date<=today;
-  return (t.finished_at||t.updated_at||"").slice(0,10)===today && t.status!=="cancelled";
-}
-function rel(ts){if(!ts)return"";const d=new Date(ts);return d.toLocaleString([],{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
-function pbName(id){const p=state.playbooks.find(p=>p.id===id);return p?p.name:"";}
-function taskRow(t){
-  const kind=t.type==="auto"?(t.resolved_type||"auto"):t.type;
+function setView(v){if(!TABS.includes(v))v="today";state.view=v;if(location.hash!=="#"+v)history.replaceState(null,"","#"+v);render();}
+window.addEventListener("hashchange",()=>setView(location.hash.slice(1)));
+document.querySelector(".tabs").onclick=e=>{const b=e.target.closest(".tab");if(b)setView(b.dataset.view);};
+const isTodayTask=t=>{const d=todayISO();if(["queued","running","review"].includes(t.status))return !t.due_date||t.due_date<=d;return (t.finished_at||t.updated_at||"").slice(0,10)===d&&t.status!=="cancelled";};
+function row(t){
   const later=t.due_date&&t.due_date>todayISO();
-  const icon={review:"!",done:"✓",failed:"✕",cancelled:"–"}[t.status]||"";
-  return `<div class="task ${t.status==="done"?"done":""}" data-id="${t.id}">
-    <div class="check ${t.status}">${icon}</div>
-    <div style="flex:1;min-width:0">
-      <div class="t">${esc(t.title)}</div>
-      <div class="meta">
-        <span class="badge st-${t.status}">${t.status==="review"?"needs your review":esc(t.status)}</span>
-        <span>${esc(kind)}</span>
-        ${t.playbook_id?`<span>📘 ${esc(pbName(t.playbook_id))}</span>`:""}
-        ${t.priority===1?`<span style="color:var(--bad)">high</span>`:""}
-        ${t.repeat?`<span>↻ ${esc(t.repeat)}</span>`:""}
-        ${later?`<span>⏰ ${esc(t.due_date)}</span>`:""}
-        <span>${rel(t.updated_at)}</span>
-      </div>
-    </div></div>`;
+  const meta=[];
+  if(t.priority===1)meta.push('<span class="readout prio-high">high</span>');
+  if(t.playbook_id)meta.push(`<span class="readout">${esc(pbName(t.playbook_id))}</span>`);
+  meta.push(`<span class="readout">${esc(kindOf(t))}</span>`);
+  if(t.repeat)meta.push(`<span class="readout">${esc(t.repeat)}</span>`);
+  meta.push(`<span class="readout muted">${later?esc(t.due_date):esc(whenOf(t.status==="done"?t.finished_at:t.updated_at))}</span>`);
+  return `<li class="row ${t.status==="done"?"is-done":""}" data-id="${t.id}" tabindex="0" aria-label="${esc(t.title)}, ${esc(t.status)}">
+    <span class="glyph ${esc(t.status)}" aria-hidden="true"></span><span class="row-title">${esc(t.title)}</span><span class="row-meta">${meta.join("")}</span></li>`;
 }
+function group(title,items){return items.length?`<div class="group"><h3>${esc(title)}</h3><ul class="rows">${items.map(row).join("")}</ul></div>`:"";}
 function render(){
-  const counts={today:0,review:0,active:0,done:0,failed:0,playbooks:state.playbooks.length};
-  state.tasks.forEach(t=>{const b=bucket(t);if(b in counts)counts[b]++;if(isToday(t))counts.today++;});
-  $("#tabs").innerHTML=TABS.map(([k,v])=>`<button class="tab ${state.tab===k?"on":""}" data-k="${k}">${v}<span class="count ${k==="review"&&counts.review?"hot":""}">${counts[k]}</span></button>`).join("");
-  if(state.tab==="playbooks")return renderPlaybooks();
-  let items,head="";
-  if(state.tab==="today"){
-    items=state.tasks.filter(isToday);
-    const done=items.filter(t=>t.status==="done").length,pct=items.length?Math.round(done*100/items.length):0;
-    const d=new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"});
-    head=`<div class="today-head"><b>${d}</b><span class="hint">${done} of ${items.length} done</span></div><div class="progress"><div style="width:${pct}%"></div></div>`;
-  } else items=state.tasks.filter(t=>bucket(t)===state.tab);
-  const empty={today:"Nothing on today's list. Add a task, paste your day, or press 🎙 and talk.",review:"Nothing waiting for review.",active:"Queue is empty.",done:"Nothing done yet.",failed:"No failures 🎉"}[state.tab];
-  $("#view").innerHTML=head+(items.length?`<div class="list">${items.map(taskRow).join("")}</div>`:`<div class="empty">${empty}</div>`);
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===state.view?"true":"false"));
+  renderInbox();renderRun();renderNotice();
+  const V=$("#view");
+  if(state.error&&!state.loaded){V.innerHTML=`<div class="empty"><strong>Can't reach AgentJ.</strong><span>Check that start.bat is still running, then reload this window.</span></div>`;return;}
+  if(!state.loaded)return;
+  if(state.view==="routines")return renderRoutines();
+  const T=state.tasks,d=todayISO();
+  if(state.view==="today"){
+    const items=T.filter(isTodayTask),done=items.filter(t=>t.status==="done").length;
+    const dateLabel=new Date().toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"});
+    const head=`<div class="dayhead"><h2>${esc(dateLabel.toLowerCase())}</h2><span class="readout">${done} of ${items.length} done</span></div><div class="progress" aria-hidden="true"><i style="--p:${items.length?(done/items.length).toFixed(3):0}"></i></div>`;
+    const later=T.filter(t=>t.status==="queued"&&t.due_date&&t.due_date>d).sort((a,b)=>a.due_date.localeCompare(b.due_date));
+    const body=group("running",items.filter(t=>t.status==="running"))+
+      group("up next",items.filter(t=>t.status==="queued").sort((a,b)=>a.priority-b.priority||a.id-b.id))+
+      group("waiting for you",items.filter(t=>t.status==="review"))+
+      group("done today",items.filter(t=>t.status==="done"))+
+      group("failed today",items.filter(t=>t.status==="failed"))+
+      group("coming up",later.slice(0,8));
+    V.innerHTML=head+(body||`<div class="empty"><strong>Nothing on today's list.</strong><span>Say “AgentJ” and tell it what you need, or type a task on the left.</span></div>`);
+  }else{
+    const by=s=>T.filter(t=>t.status===s);
+    const body=group("running",by("running"))+group("waiting for you",by("review"))+group("queued",by("queued"))+group("failed",by("failed"))+group("done",by("done"))+group("cancelled",by("cancelled"));
+    V.innerHTML=body||`<div class="empty"><strong>No tasks yet.</strong><span>Your first task will show up here.</span></div>`;
+  }
 }
-function renderPlaybooks(){
-  const sched=p=>p.schedule?`${p.schedule}${p.run_time?" at "+p.run_time:""}`:"on request";
-  $("#view").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="hint" style="font-size:13px">Playbooks are how you teach AgentJ your repeated tasks. Say a trigger phrase (or add a task that mentions it) and it follows your steps.</div>
-      <button class="primary" onclick="openPb(null)">+ New playbook</button></div>`+
-    (state.playbooks.length?`<div class="list">`+state.playbooks.map(p=>`<div class="pb">
-      <div style="display:flex;gap:10px;align-items:center"><div class="t" style="flex:1">📘 ${esc(p.name)}</div>
-        <span class="badge">${esc(p.type)}</span><span class="badge">${esc(sched(p))}</span>${p.enabled?"":'<span class="badge st-failed">off</span>'}</div>
-      ${p.triggers?`<div class="hint">Say: ${esc(p.triggers)}</div>`:""}
-      <div class="steps">${esc(p.steps)}</div>
-      <div style="display:flex;gap:8px"><button onclick="runPb(${p.id})">▶ Run now</button><button class="ghost" onclick="openPb(${p.id})">Edit</button></div>
-    </div>`).join("")+`</div>`:`<div class="empty">No playbooks yet. Click “New playbook”, press 🎙 and explain how you do a task you repeat.</div>`);
-}
-$("#tabs").onclick=e=>{const b=e.target.closest(".tab");if(b){state.tab=b.dataset.k;render();}};
-$("#view").onclick=e=>{const el=e.target.closest(".task");if(el)openDrawer(+el.dataset.id);};
+$("#view").addEventListener("click",e=>{const r=e.target.closest(".row");if(r)openTask(+r.dataset.id);});
+$("#view").addEventListener("keydown",e=>{const r=e.target.closest(".row");if(r&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openTask(+r.dataset.id);}});
 
-/* ---------- task drawer ---------- */
-async function openDrawer(id){state.openId=id;state.openSig=null;$("#dLogs").innerHTML="";$("#dLogsWrap").open=false;$("#drawer").classList.add("open");await loadDrawer();}
-function closeDrawer(){state.openId=null;$("#drawer").classList.remove("open");}
-$("#drawer").onclick=e=>{if(e.target.id==="drawer")closeDrawer();};
-async function loadDrawer(){
+function renderInbox(){
+  const items=state.tasks.filter(t=>t.status==="review");
+  $("#reviewCount").textContent=items.length?String(items.length):"";
+  $("#inbox").innerHTML=items.length?items.map(t=>`<li class="item">
+      <button type="button" class="item-title" data-open="${t.id}">${esc(t.title)}</button>
+      <div class="item-preview">${esc(plain(t.result).slice(0,240))}</div>
+      <div class="item-actions"><button type="button" class="btn" data-approve="${t.id}">approve</button><button type="button" class="btn btn--quiet" data-open="${t.id}">read and reply</button></div>
+    </li>`).join(""):`<li class="empty"><strong>Nothing to review.</strong><span>When a task is done it lands here, with a chime.</span></li>`;
+}
+$("#inbox").addEventListener("click",async e=>{
+  const o=e.target.closest("[data-open]"),a=e.target.closest("[data-approve]");
+  if(o)openTask(+o.dataset.open);
+  if(a){a.disabled=true;const r=await post(`/api/tasks/${a.dataset.approve}/approve`);toast(r.next?`Approved. Next run ${r.next.due_date}.`:"Approved");refresh();}
+});
+
+let runLogFor=null;
+async function renderRun(){
+  const s=state.status,cur=s.current?state.tasks.find(t=>t.id===s.current):null;
+  $("#runState").textContent=s.paused?"queue paused":(cur?"working":"idle");
+  if(!cur){
+    runLogFor=null;
+    const next=state.tasks.filter(t=>t.status==="queued"&&(!t.due_date||t.due_date<=todayISO())).sort((a,b)=>a.priority-b.priority||a.id-b.id)[0];
+    $("#runBody").innerHTML=s.paused?`<p class="muted" style="margin:0">The queue is paused. ${next?"Next up: "+esc(next.title)+".":""}</p><div><button type="button" class="btn" id="runResume">resume queue</button></div>`
+      :`<p class="muted" style="margin:0">${next?"Starting next: "+esc(next.title):"Nothing running. Tell AgentJ what to do."}</p>`;
+    const rb=$("#runResume");if(rb)rb.onclick=()=>$("#btnPause").click();
+    return;
+  }
+  if(runLogFor!==cur.id){runLogFor=cur.id;$("#runBody").innerHTML=`<div class="run-title">${esc(cur.title)}</div><div class="readout">${esc(kindOf(cur))}${cur.playbook_id?", routine "+esc(pbName(cur.playbook_id)):""}</div><div class="run-log" id="runLog"></div><div><button type="button" class="btn btn--quiet" data-open="${cur.id}">open</button></div>`;
+    $("#runBody").querySelector("[data-open]").onclick=()=>openTask(cur.id);}
+  try{
+    const t=await api(`/api/tasks/${cur.id}`);const logs=(t.logs||[]).slice(-8);const el=$("#runLog");if(!el)return;
+    el.innerHTML=logs.map((l,i)=>`<div class="${i===logs.length-1?"last":""} ${esc(l.level)}">${esc(l.ts.slice(11,16))}  ${esc(l.message)}</div>`).join("");
+    el.scrollTop=el.scrollHeight;
+  }catch(e){}
+}
+
+function renderNotice(){
+  const s=state.status,N=$("#notice");let html="";
+  if(state.loaded&&s.provider!=="ollama"&&!s.has_key)html=`<div class="notice"><p>AgentJ needs a free Gemini key to think. It takes a minute to get one.</p><button type="button" class="btn" data-settings>add key</button></div>`;
+  else if(state.loaded&&s.chrome_mode==="own"&&!s.chrome)html=`<div class="notice"><p>To let AgentJ use your Chrome, open chrome://inspect/#remote-debugging once and switch it on.</p></div>`;
+  if(N.innerHTML!==html)N.innerHTML=html;
+  const b=N.querySelector("[data-settings]");if(b)b.onclick=openSettings;
+}
+
+function renderRoutines(){
+  const sched=p=>p.schedule?`${p.schedule}${p.run_time?" at "+p.run_time:""}`:"when you ask";
+  $("#view").innerHTML=`<div class="dayhead"><h2>routines</h2><button type="button" class="btn" id="newRoutine">new routine</button></div>
+    <p class="hint" style="margin:0 0 var(--space-md)">Teach AgentJ the tasks you repeat. Say one of a routine's phrases and it follows your steps.</p>`+
+    (state.playbooks.length?`<div style="border-top:var(--rule-hair) solid var(--color-rule)">`+state.playbooks.map(p=>`<div class="routine">
+      <div style="min-width:0;display:grid;gap:var(--space-2xs)"><div class="routine-name">${esc(p.name)}</div>
+        <div class="readout">${esc(KIND[p.type]||p.type)}, ${esc(sched(p))}${p.enabled?"":", off"}</div>
+        ${p.triggers?`<div class="hint">say: ${esc(p.triggers)}</div>`:""}
+        <div class="routine-steps">${esc(p.steps)}</div></div>
+      <div style="display:flex;gap:var(--space-xs);align-items:start"><button type="button" class="btn" data-run="${p.id}">run now</button><button type="button" class="btn btn--quiet" data-edit="${p.id}">edit</button></div>
+    </div>`).join("")+`</div>`
+    :`<div class="empty"><strong>No routines yet.</strong><span>Explain one task you do every day or week, out loud or typed, and AgentJ writes the steps.</span><button type="button" class="btn" id="newRoutine2">new routine</button></div>`);
+  ["#newRoutine","#newRoutine2"].forEach(s=>{const b=$(s);if(b)b.onclick=()=>openRoutine(null);});
+  $("#view").querySelectorAll("[data-run]").forEach(b=>b.onclick=()=>runRoutine(+b.dataset.run));
+  $("#view").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openRoutine(+b.dataset.edit));
+}
+
+/* ---------- sheets ---------- */
+let lastFocus=null;
+function openSheet(id){lastFocus=document.activeElement;const s=$(id);s.classList.add("open");setTimeout(()=>{const f=s.querySelector("[data-close]");f&&f.focus();},50);}
+function closeSheet(id){const s=$(id);if(!s.classList.contains("open"))return;s.classList.remove("open");if(id==="#taskSheet")state.openId=null;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function closeAll(){["#taskSheet","#pbSheet","#setSheet"].forEach(closeSheet);}
+document.querySelectorAll(".scrim").forEach(s=>{s.addEventListener("click",e=>{if(e.target===s||e.target.closest("[data-close]"))closeSheet("#"+s.id);});});
+
+async function openTask(id){state.openId=id;state.openSig=null;$("#tLogs").innerHTML="";$("#tLogsWrap").open=false;openSheet("#taskSheet");await loadTask();}
+async function loadTask(){
   if(!state.openId)return;
-  const t=await api(`/api/tasks/${state.openId}`);if(t.error){closeDrawer();return;}
-  const logs=$("#dLogs");const atBottom=logs.scrollTop+logs.clientHeight>=logs.scrollHeight-10;
-  logs.innerHTML=t.logs.map(l=>`<div class="${esc(l.level)}"><span class="ts">${esc(l.ts.slice(11))}</span> ${esc(l.message)}</div>`).join("")||"No activity yet.";
-  if(atBottom)logs.scrollTop=logs.scrollHeight;
-  const sig=`${t.id}|${t.status}|${t.updated_at}`;
-  if(sig===state.openSig)return;
-  state.openSig=sig;
-  $("#dTitle").textContent=t.title;
-  $("#dMeta").innerHTML=`#${t.id} · ${esc(t.type==="auto"?(t.resolved_type||"auto"):t.type)} · <span class="badge st-${esc(t.status)}">${esc(t.status)}</span> · attempts ${t.attempts}${t.playbook_id?` · 📘 ${esc(pbName(t.playbook_id))}`:""}${t.feedback?` · last feedback: “${esc(t.feedback)}”`:""}`;
-  $("#dDetails").innerHTML=t.details?md(t.details):"";
-  $("#dResult").innerHTML=t.status==="running"?'<p><span class="spinner"></span> Working on it… the log below updates live. For Chrome tasks, click <b>Allow</b> if Chrome asks.</p>'
-    :t.status==="queued"?"<p style='color:var(--muted)'>Waiting in the queue.</p>":md(t.result);
-  if(t.status==="running")$("#dLogsWrap").open=true;
+  let t;try{t=await api(`/api/tasks/${state.openId}`);}catch(e){return;}
+  if(t.error){closeSheet("#taskSheet");return;}
+  const L=$("#tLogs"),atBottom=L.scrollTop+L.clientHeight>=L.scrollHeight-10;
+  L.innerHTML=(t.logs||[]).map(l=>`<div class="${esc(l.level)}"><span class="ts">${esc(l.ts.slice(11))}</span>  ${esc(l.message)}</div>`).join("")||"No activity yet.";
+  if(atBottom)L.scrollTop=L.scrollHeight;
+  const sig=`${t.id}|${t.status}|${t.updated_at}`;if(sig===state.openSig)return;state.openSig=sig;
+  $("#tTitle").textContent=t.title;
+  const facts=[["status",t.status],["agent",kindOf(t)],["attempts",t.attempts]];
+  if(t.playbook_id)facts.push(["routine",pbName(t.playbook_id)]);
+  if(t.repeat)facts.push(["repeats",t.repeat]);
+  if(t.feedback)facts.push(["your last note",t.feedback]);
+  $("#tFacts").innerHTML=facts.map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+  $("#tDetails").innerHTML=t.details?md(t.details):"";
+  $("#tResult").innerHTML=t.status==="running"?'<p><span class="spin"></span> Working on it. The log below updates as it goes. For Chrome tasks, click Allow if Chrome asks.</p>'
+    :t.status==="queued"?'<p class="muted">Waiting in the queue.</p>':md(t.result);
+  if(t.status==="running")$("#tLogsWrap").open=true;
   const f=[];
-  if(t.status==="review")f.push(`<button class="primary" onclick="act(${t.id},'approve')">✓ Approve</button>`);
-  if(["review","done","failed","cancelled"].includes(t.status))f.push(`<input id="fb" placeholder="What should change? (optional)" style="flex:1;min-width:200px"><button onclick="redo(${t.id})">↻ Redo</button>`);
-  if(["queued","running"].includes(t.status))f.push(`<button onclick="act(${t.id},'cancel')">Cancel</button>`);
-  if(t.result)f.push(`<button class="ghost" onclick="copyResult()">Copy</button>`);
-  if(t.status==="review"||t.status==="done")f.push(`<button class="ghost" onclick="saveAsPlaybook(${t.id})" title="Turn this into a reusable playbook">📘 Save as playbook</button>`);
-  f.push(`<button class="ghost danger" onclick="del(${t.id})">Delete</button>`);
-  $("#dFoot").innerHTML=f.join("");
-  state.openTask=t;
+  if(t.status==="review")f.push(`<button type="button" class="btn btn--primary" data-act="approve">approve</button>`);
+  if(["review","done","failed","cancelled"].includes(t.status))f.push(`<input id="fb" name="feedback" autocomplete="off" placeholder="What should change?" aria-label="What should change"><button type="button" class="btn" data-act="redo">redo</button>`);
+  if(["queued","running"].includes(t.status))f.push(`<button type="button" class="btn" data-act="cancel">cancel</button>`);
+  if(t.result)f.push(`<button type="button" class="btn btn--quiet" data-act="copy">copy</button>`);
+  if(["review","done"].includes(t.status))f.push(`<button type="button" class="btn btn--quiet" data-act="routine">make a routine</button>`);
+  f.push(`<button type="button" class="btn btn--quiet btn--danger" data-act="delete" style="margin-left:auto">delete</button>`);
+  $("#tFoot").innerHTML=f.join("");state.openTask=t;
 }
-async function act(id,a){state.openSig=null;const r=await post(`/api/tasks/${id}/${a}`);toast(a==="approve"?(r.next?`Approved · next run ${r.next.due_date}`:"Approved"):"Done");refresh();loadDrawer();}
-async function redo(id){state.openSig=null;await post(`/api/tasks/${id}/redo`,{feedback:($("#fb")||{}).value||""});toast("Sent back to the queue");refresh();loadDrawer();}
-async function del(id){if(!confirm("Delete this task?"))return;await post(`/api/tasks/${id}/delete`);closeDrawer();refresh();}
-function copyResult(){navigator.clipboard.writeText((state.openTask||{}).result||"");toast("Copied");}
-function saveAsPlaybook(){const t=state.openTask;closeDrawer();openPb(null,{name:t.title.slice(0,60),type:t.type==="auto"?(t.resolved_type||"auto"):t.type,steps:t.details||"",explain:`Task: ${t.title}\n${t.details||""}`});}
+$("#tFoot").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;const t=state.openTask,a=b.dataset.act;
+  if(a==="copy"){try{await navigator.clipboard.writeText(t.result||"");toast("Copied");}catch(err){toast("Select the text to copy it.");}return;}
+  if(a==="routine"){closeSheet("#taskSheet");openRoutine(null,{name:t.title.slice(0,60),type:t.type==="auto"?(t.resolved_type||"auto"):t.type,explain:`${t.title}\n${t.details||""}`});return;}
+  if(a==="delete"){if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="delete for good";setTimeout(()=>{b.dataset.armed="";b.textContent="delete";},4000);return;}
+    await post(`/api/tasks/${t.id}/delete`);closeSheet("#taskSheet");toast("Deleted");refresh();return;}
+  state.openSig=null;
+  if(a==="redo"){await post(`/api/tasks/${t.id}/redo`,{feedback:($("#fb")||{}).value||""});toast("Sent back with your note");}
+  else{const r=await post(`/api/tasks/${t.id}/${a}`);toast(a==="approve"?(r.next?`Approved. Next run ${r.next.due_date}.`:"Approved"):"Cancelled");}
+  refresh();loadTask();
+});
 
-/* ---------- playbooks ---------- */
 const PBF=["name","triggers","type","steps","schedule","run_time"];
-function openPb(id,prefill){
-  const p=id?state.playbooks.find(x=>x.id===id):(prefill||{});
-  state.editingPb=id||null;
-  $("#pbHead").textContent=id?"Edit playbook":"New playbook";
+function openRoutine(id,prefill){
+  const p=id?state.playbooks.find(x=>x.id===id):(prefill||{});state.editingPb=id||null;
+  $("#pbHead").textContent=id?"edit routine":"new routine";
   PBF.forEach(k=>$("#pb_"+k).value=p[k]||(k==="type"?"auto":""));
-  $("#pb_enabled").checked=id?!!p.enabled:true;
-  $("#pbExplain").value=p.explain||"";
-  $("#pbDelete").style.display=id?"":"none";
-  $("#pbModal").classList.add("open");
+  $("#pb_enabled").checked=id?!!p.enabled:true;$("#pbExplain").value=p.explain||"";
+  $("#pbDelete").hidden=!id;openSheet("#pbSheet");
 }
-function closePb(){$("#pbModal").classList.remove("open");if(listening&&voiceTarget)stopListening();}
-$("#pbModal").onclick=e=>{if(e.target.id==="pbModal")closePb();};
-$("#pbDictate").onclick=()=>startListening($("#pbExplain"));
-$("#pbDraft").onclick=async()=>{
-  const text=$("#pbExplain").value.trim();if(!text){toast("Explain the task first (type or 🎙).");return;}
-  const b=$("#pbDraft");b.disabled=true;b.innerHTML='<span class="spinner"></span> Writing steps…';
-  const d=await post("/api/playbooks/draft",{text});
-  b.disabled=false;b.textContent="Turn into playbook ↓";
-  if(d.error){toast(d.error);return;}
-  PBF.forEach(k=>{if(d[k])$("#pb_"+k).value=d[k];});
-  toast("Check the steps, then save.");
+$("#pbDictate").onclick=()=>{
+  if(Voice.mode==="dictate"){Voice.mode="idle";$("#pbDictate").textContent="dictate";if(!Voice.on)stopRec();return;}
+  if(!ensureRec())return;Voice.target=$("#pbExplain");Voice.mode="dictate";Voice.keepAlive=true;if(!Voice.on)startRec();
+  $("#pbDictate").textContent="stop dictating";toast("Speak now. Click stop dictating when you're done.");
 };
-async function savePb(){
+$("#pbDraft").onclick=async()=>{
+  const text=$("#pbExplain").value.trim();if(!text){toast("Explain the task first, typed or dictated.");$("#pbExplain").focus();return;}
+  const b=$("#pbDraft");b.disabled=true;b.innerHTML='<span class="spin"></span> writing the steps';
+  try{const d=await post("/api/playbooks/draft",{text});if(d.error)toast(d.error);else{PBF.forEach(k=>{if(d[k])$("#pb_"+k).value=d[k];});toast("Check the steps, then save.");}}
+  catch(e){toast("Couldn't write the steps. Try again.");}
+  b.disabled=false;b.textContent="write the steps for me";
+};
+async function saveRoutine(){
   const body={};PBF.forEach(k=>body[k]=$("#pb_"+k).value);body.enabled=$("#pb_enabled").checked?1:0;
-  if(!body.name.trim()){toast("Give it a name");return null;}
+  if(!body.name.trim()){toast("Give the routine a name.");$("#pb_name").focus();return null;}
   const r=state.editingPb?await post(`/api/playbooks/${state.editingPb}/update`,body):await post("/api/playbooks",body);
-  if(r.error){toast(r.error);return null;}
-  state.editingPb=r.id;return r;
+  if(r.error){toast(r.error);return null;}state.editingPb=r.id;return r;
 }
-$("#pbSave").onclick=async()=>{if(await savePb()){closePb();state.tab="playbooks";toast("Playbook saved");refresh();}};
-$("#pbRun").onclick=async()=>{const p=await savePb();if(p){closePb();await runPb(p.id);}};
-$("#pbDelete").onclick=async()=>{if(!state.editingPb||!confirm("Delete this playbook?"))return;await post(`/api/playbooks/${state.editingPb}/delete`);closePb();refresh();};
-async function runPb(id){await post(`/api/playbooks/${id}/run`);state.tab="today";toast("Playbook started");refresh();}
+$("#pbSave").onclick=async()=>{if(await saveRoutine()){closeSheet("#pbSheet");setView("routines");toast("Routine saved");refresh();}};
+$("#pbRun").onclick=async()=>{const p=await saveRoutine();if(p){closeSheet("#pbSheet");await runRoutine(p.id);}};
+$("#pbDelete").onclick=async e=>{const b=e.currentTarget;if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="delete for good";setTimeout(()=>{b.dataset.armed="";b.textContent="delete";},4000);return;}
+  await post(`/api/playbooks/${state.editingPb}/delete`);closeSheet("#pbSheet");toast("Routine deleted");refresh();};
+async function runRoutine(id){await post(`/api/playbooks/${id}/run`);setView("today");toast("Routine started");refresh();}
 
-/* ---------- settings ---------- */
-const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","browser_allowed_domains","about_me","voice_lang","speak_replies"];
-async function openSettings(){const s=await api("/api/settings");SKEYS.forEach(k=>$("#s_"+k).value=s[k]??"");$("#testMsg").textContent="";$("#settings").classList.add("open");}
-function closeSettings(){$("#settings").classList.remove("open");}
-async function saveSettings(){const body={};SKEYS.forEach(k=>body[k]=$("#s_"+k).value);await post("/api/settings",body);}
+const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","browser_allowed_domains","about_me","voice_lang","speak_replies","wake_words","notify","voice_engine","whisper_model","tts_voice","desktop_max_steps"];
+async function openSettings(){const s=await api("/api/settings");SKEYS.forEach(k=>{const el=$("#s_"+k);if(el)el.value=s[k]??"";});$("#testMsg").textContent="";openSheet("#setSheet");}
+async function saveSettings(){const body={};SKEYS.forEach(k=>{const el=$("#s_"+k);if(el)body[k]=el.value;});await post("/api/settings",body);if(Voice.rec){try{Voice.rec.abort();}catch(e){}}}
 $("#btnSettings").onclick=openSettings;
-$("#settings").onclick=e=>{if(e.target.id==="settings")closeSettings();};
-$("#btnSave").onclick=async()=>{await saveSettings();closeSettings();toast("Saved");refresh();};
-$("#btnTest").onclick=async()=>{$("#testMsg").innerHTML='<span class="spinner"></span> testing…';await saveSettings();const r=await post("/api/settings/test");$("#testMsg").textContent=(r.ok?"✓ ":"✗ ")+r.message;};
+$("#btnSave").onclick=async()=>{await saveSettings();closeSheet("#setSheet");toast("Settings saved");refresh();};
+$("#btnTest").onclick=async()=>{$("#testMsg").innerHTML='<span class="spin"></span> testing';await saveSettings();const r=await post("/api/settings/test");$("#testMsg").textContent=r.message;};
 $("#btnPause").onclick=async()=>{await post("/api/worker",{paused:!state.status.paused});refresh();};
 
-/* ---------- status + polling ---------- */
-function pill(id,cls,text){$(id).innerHTML=`<span class="dot ${cls}"></span>${esc(text)}`;}
+/* ---------- polling ---------- */
 async function refresh(){
   try{
     const [tasks,status,pbs]=await Promise.all([api("/api/tasks"),api("/api/status"),api("/api/playbooks")]);
-    state.tasks=tasks;state.status=status;state.playbooks=pbs;
-    if(!document.querySelector("#view .pb input, #view input:focus"))render();
-    $("#orb").classList.toggle("busy",!!status.current);
-    pill("#pWorker",status.paused?"warn":"ok",status.paused?"Paused":(status.current?`Working on #${status.current}`:"Idle"));
-    pill("#pAI",status.provider==="ollama"||status.has_key?"ok":"bad",status.provider==="ollama"?"Ollama":(status.has_key?"Gemini":"No API key"));
-    pill("#pChrome",status.chrome?"ok":"warn",status.chrome?`Chrome: ${status.chrome}`:"Chrome not connected");
-    $("#btnPause").textContent=status.paused?"Resume":"Pause";
-    const ban=$("#banner");
-    if(status.provider!=="ollama"&&!status.has_key){ban.style.display="block";ban.innerHTML='Add your free Gemini API key in <a href="#" onclick="openSettings();return false">Settings</a> so AgentJ can think.';}
-    else if(status.chrome_mode==="own"&&!status.chrome){ban.style.display="block";ban.innerHTML='To let AgentJ use <b>your</b> Chrome: open <b>chrome://inspect/#remote-debugging</b> in Chrome and switch remote debugging <b>ON</b> (one time). Chrome 144+ needed.';}
-    else ban.style.display="none";
-  }catch(e){pill("#pWorker","bad","AgentJ not running");}
+    if(state.loaded)tasks.forEach(t=>{if(t.status==="review"&&state.prevStatus[t.id]&&state.prevStatus[t.id]!=="review")notifyReady(t);});
+    state.prevStatus=Object.fromEntries(tasks.map(t=>[t.id,t.status]));
+    state.tasks=tasks;state.status=status;state.playbooks=pbs;state.loaded=true;state.error=false;
+    const ai=status.provider==="ollama"?"ai ollama":(status.has_key?"ai gemini":"ai needs a key");
+    $("#stAI").textContent=ai;$("#stAI").className="readout "+(status.provider==="ollama"||status.has_key?"":"state-warn");
+    $("#stChrome").textContent=status.chrome?`chrome ${status.chrome}`:"chrome not connected";$("#stChrome").className="readout "+(status.chrome?"":"state-warn");
+    $("#btnPause").textContent=status.paused?"resume queue":"pause queue";
+    if(!document.querySelector("#view input:focus"))render();else{renderInbox();renderRun();}
+  }catch(e){state.error=true;render();}
 }
-renderChips();refresh();
+setView(location.hash.slice(1)||"today");
+refresh().then(()=>{
+  if(isLocal()){pollLocal();return;}
+  try{if(localStorage.getItem("agentj-wake")==="1")setWake(true);}catch(e){} $("#heard").textContent=idleHint();
+});
 setInterval(refresh,3000);
-setInterval(()=>{if(state.openId)loadDrawer();},2500);
+setInterval(()=>{if(state.openId)loadTask();},2500);
 </script>
-<script>/* Demo-only tweaks applied after the dashboard script loads. */
+<script>/* Demo-only tweaks applied after the dashboard script loads.
+   Shared pages can't use the microphone, so the wake word is tried by typing "AgentJ, ..." instead. */
 (function () {
-  // Microphones aren't available inside the shared demo page, so the 🎙 button opens a
-  // "type what you'd say" box. On your PC the real app listens to your voice.
-  const bar = document.getElementById("voicebar");
-  bar.querySelector(".inner").innerHTML =
-    '<span class="spinner" id="vSpin" hidden></span>' +
-    '<input id="vType" placeholder="Type what you would say, e.g. “SEO audit of canadiansme.ca and brainstorm 5 blog ideas”" style="flex:1;min-width:0">' +
-    '<button class="primary" id="vSend">Send</button><button class="ghost" id="vClose">✕</button>';
-  const input = document.getElementById("vType");
-  async function send() {
-    const text = input.value.trim(); if (!text) return;
-    const spin = document.getElementById("vSpin"); spin.hidden = false; input.disabled = true;
-    const r = await post("/api/voice", { text });
-    spin.hidden = true; input.disabled = false; input.value = "";
-    toast("AgentJ: " + (r.reply || "Done.")); speak(r.reply);
-    if (r.created && r.created.length) state.tab = "today";
-    refresh();
-  }
-  document.getElementById("vSend").onclick = send;
-  input.onkeydown = e => { if (e.key === "Enter") send(); };
-  document.getElementById("vClose").onclick = () => { bar.style.display = "none"; };
-  window.startListening = function (target) {
-    if (target) { target.focus(); toast("In the demo, type your explanation. On your PC, 🎙 Dictate uses your microphone."); return; }
-    bar.style.display = "block"; input.focus();
+  let demoWake = false;
+  const WAKE = /^\s*(?:hey\s+)?agent\s*j(?:ay)?\b[\s,.!?:-]*/i;
+  const hintOff = "Demo: turn on the wake word, then type “AgentJ, SEO audit of b2bprint.ca” below. On your PC you just say it.";
+  const hintOn = "Demo: listening for “AgentJ”. Type it below, then what you need. On your PC this works with your voice, offline.";
+  document.getElementById("heard").textContent = hintOff;
+  document.getElementById("cmd").placeholder = "Type what you would say, e.g. AgentJ, brainstorm 5 blog ideas";
+  document.getElementById("wakeToggle").onclick = () => {
+    demoWake = !demoWake;
+    const b = document.getElementById("wakeToggle");
+    b.setAttribute("aria-pressed", demoWake ? "true" : "false");
+    b.textContent = demoWake ? "listening for agentj" : "wake word off";
+    document.getElementById("heard").textContent = demoWake ? hintOn : hintOff;
   };
-  document.getElementById("btnMic").onclick = () => window.startListening(null);
-  document.getElementById("pbDictate").onclick = () => window.startListening(document.getElementById("pbExplain"));
-  const origCopy = window.copyResult;
-  window.copyResult = function () { try { origCopy(); } catch (e) { toast("Select the text to copy it."); } };
+  const talk = () => { const c = document.getElementById("cmd"); c.focus(); if (!c.value) c.value = "AgentJ, "; toast("In the demo, type what you would say."); };
+  document.getElementById("btnTalk").onclick = talk;
+  document.addEventListener("keydown", e => { if (e.altKey && (e.key === "j" || e.key === "J")) { e.stopImmediatePropagation(); e.preventDefault(); talk(); } }, true);
+  const original = document.getElementById("compose").onsubmit;
+  document.getElementById("compose").onsubmit = async e => {
+    const c = document.getElementById("cmd"), text = c.value.trim();
+    const m = text.match(WAKE);
+    if (!m || text.includes("\n")) return original(e);
+    e.preventDefault();
+    const cmd = text.slice(m[0].length).trim();
+    c.value = "";
+    chime(true); setMode("awake", null, cmd || "…");
+    await new Promise(r => setTimeout(r, 900));
+    if (!cmd) { chime(false); setMode("idle", null, demoWake ? hintOn : hintOff); return; }
+    setMode("thinking", null, "“" + cmd + "”");
+    await sendCommand(cmd, true);
+    document.getElementById("heard").textContent = demoWake ? hintOn : hintOff;
+  };
+  document.getElementById("pbDictate").onclick = () => { document.getElementById("pbExplain").focus(); toast("In the demo, type your explanation. On your PC, dictate uses your microphone."); };
+  window.idleHint = () => (demoWake ? hintOn : hintOff);
 })();
 </script>

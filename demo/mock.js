@@ -6,7 +6,7 @@
   const nowISO = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   const today = () => nowISO().slice(0, 10);
   const ago = mins => nowISO(new Date(Date.now() - mins * 60000));
-  const TYPES = ["auto", "brainstorm", "seo", "browser", "research", "write"];
+  const TYPES = ["auto", "brainstorm", "seo", "browser", "desktop", "research", "write"];
   const REPEATS = ["", "daily", "weekdays", "weekly"];
 
   let nextId = 1, nextPb = 1;
@@ -17,7 +17,8 @@
       ollama_model: "qwen3:4b", browser_provider: "gemini", chrome_mode: "own", chrome_cdp_url: "http://127.0.0.1:9222",
       chrome_profile: "Default", browser_max_steps: "25", browser_allowed_domains: "youtube.com, *.youtube.com, *.google.com",
       about_me: "Runs CanadianSME (canadiansme.ca), a small-business magazine, and is launching B2Bprint.ca (online print store).",
-      worker_paused: "0", speak_replies: "1", voice_lang: "en-IN",
+      worker_paused: "0", speak_replies: "1", voice_lang: "en-IN", wake_words: "agentj, agent j, agent jay", notify: "1",
+      voice_engine: "local", whisper_model: "base", tts_voice: "af_heart", desktop_max_steps: "20",
     },
   };
 
@@ -50,6 +51,7 @@
   const KEYWORDS = [
     ["seo", /\bseo\b|site audit|meta (title|description)|page ?speed|backlink|keyword rank/],
     ["brainstorm", /brain ?storm|\bideas\b|name ideas|\bangles\b/],
+    ["desktop", /\bdesktop\b|my (pc|computer|laptop|screen)|\bexcel\b|word doc|powerpoint|file explorer|\bfolder\b|notepad/],
     ["browser", /youtube|\bchrome\b|go to |open (the )?(site|website|page)|log ?in|upload|search console|analytics|click|subscribe|comment on|reply to|check my (channel|inbox|dashboard)/],
     ["research", /research|find out|compare|latest|news|competitor|look up|what is|who is/],
     ["write", /\bwrite\b|draft|email|caption|post|article|blog|script|copy\b|rewrite|summari[sz]e/],
@@ -105,6 +107,7 @@
     let kind = t.type !== "auto" ? t.type : (pb && pb.type !== "auto" ? pb.type : (t.resolved_type || classify(t)));
     update(t, { resolved_type: kind }); log(t.id, `Agent selected: ${kind}`);
     if (kind === "browser") return browserDemo(t, pb);
+    if (kind === "desktop") return desktopDemo(t);
     if (kind === "seo") return seoDemo(t);
     log(t.id, kind === "research" ? "Researching…" : kind === "brainstorm" ? "Brainstorming…" : "Working on it…");
     const out = await ask(context(t) + "\n\n" + GUIDES[kind]);
@@ -120,6 +123,13 @@
     for (const s of steps) { log(t.id, s, "browser"); await sleep(900); if (t.status !== "running") return ""; }
     const plan = await ask(context(t) + "\n\nThis is a DEMO: you cannot browse. Write what the AgentJ Chrome agent would do for this task in the user's own Chrome: a numbered list of concrete browser steps (sites, pages, buttons), then a short example of the report it would hand back (clearly marked as an example). Remind that it stops with NEEDS APPROVAL before any post/send/publish.", { modelTier: "quick" });
     return `> **Demo:** in the real app this runs in your own Chrome and reports what it actually found.\n\n${plan || canned("browser", t) + NO_AI}`;
+  }
+  async function desktopDemo(t) {
+    for (const s of ["Taking over the desktop. Fling the mouse to the top-left corner to stop me.", "Step 1: screenshot read, pressing the Windows key", "Step 2: typing the app name", "Step 3: working in the app"]) {
+      log(t.id, s, "browser"); await sleep(900); if (t.status !== "running") return "";
+    }
+    const plan = await ask(context(t) + "\n\nThis is a DEMO: you cannot see or control the PC. List the concrete desktop steps AgentJ's desktop agent would take on Windows (apps, clicks, keys), then a short example of the summary it would report, clearly marked as an example.", { modelTier: "quick" });
+    return `> **Demo:** in the real app this moves your mouse and keyboard on your PC, step by step.\n\n${plan || "1. Press the Windows key and open Excel\n2. Open the file\n3. Select column B and read the sum in the status bar\n\nExample report: the total is shown in the status bar." + NO_AI}`;
   }
   async function seoDemo(t) {
     const m = `${t.title} ${t.details}`.match(/(https?:\/\/[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|ca|org|net|io|ai|co|in|store|dev)\b)/i);
@@ -173,6 +183,10 @@
     if (!low) return { reply: "I didn't catch that.", created: [] };
     if (/\b(pause|stop working|hold on)\b/.test(low) && low.length < 40) { S.settings.worker_paused = "1"; return { reply: "Paused. Say resume when you want me to continue.", created: [] }; }
     if (/\b(resume|continue|start working|carry on)\b/.test(low) && low.length < 40) { S.settings.worker_paused = "0"; return { reply: "Resuming the queue.", created: [] }; }
+    if (/\b(brief me|briefing|plan (?:for )?my day|my day|good morning)\b/.test(low) && low.length < 60) {
+      const rv = S.tasks.filter(t => t.status === "review"), q = S.tasks.filter(t => t.status === "queued");
+      return { reply: `Here's your day. ${rv.length} waiting for your review${rv[0] ? ", starting with " + rv[0].title : ""}. ${q.length} queued.`, created: [] };
+    }
     if (/\b(status|what(?:'s|s| is) (?:left|pending|remaining)|anything left|how many tasks|what are you (?:doing|working on))\b/.test(low) && low.length < 60) {
       const c = s => S.tasks.filter(t => t.status === s).length; const cur = S.current && getTask(S.current);
       return { reply: `${c("queued")} queued, ${c("review")} waiting for your review, ${c("failed")} failed.${cur ? " I'm working on: " + cur.title + "." : ""}`, created: [] };
@@ -201,7 +215,8 @@
       if (path === "/api/playbooks") return json([...S.playbooks].sort((a, c) => a.name.localeCompare(c.name)));
       if (path === "/api/settings") return json(S.settings);
       if (path === "/api/status") return json({ current: S.current, paused: S.settings.worker_paused === "1", provider: S.settings.provider, has_key: true,
-        chrome: "your Chrome (demo)", chrome_mode: S.settings.chrome_mode, speak: S.settings.speak_replies === "1", voice_lang: S.settings.voice_lang });
+        chrome: "your chrome (demo)", chrome_mode: S.settings.chrome_mode, speak: S.settings.speak_replies === "1", voice_lang: S.settings.voice_lang,
+        wake_words: "agentj, agent j", notify: true, voice: { engine: "demo" } });
       return json({ error: "not found" }, 404);
     }
     if (path === "/api/tasks") {
@@ -267,6 +282,7 @@
   const t3 = createTask("YouTube comments check", "", "browser", 2, "", "", yt.id);
   log(t3.id, "Created automatically by the 'YouTube comments check' playbook schedule");
   createTask("SEO audit of b2bprint.ca homepage", "", "auto", 2);
+  createTask("Open Excel on my PC and total the September sponsorship sheet", "", "desktop", 3);
   S.settings.worker_paused = "1"; // start paused so the visitor sees the queue; they press Resume
   window.__agentjDemo = { S };
 })();

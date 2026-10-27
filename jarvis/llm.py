@@ -97,14 +97,19 @@ def gemini_model(settings):
     return settings.get("gemini_model") or pick_gemini_model(key)
 
 
-def gemini_generate(prompt, system="", settings=None, web_search=False, temperature=0.7):
+def gemini_generate(prompt, system="", settings=None, web_search=False, temperature=0.7, images=None, json_mode=False):
     settings = settings or db.get_settings()
     key = settings.get("gemini_api_key")
     model = gemini_model(settings)
+    parts = [{"text": prompt}]
+    for img in images or []:  # (mime_type, base64_data)
+        parts.append({"inline_data": {"mime_type": img[0], "data": img[1]}})
     payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "contents": [{"role": "user", "parts": parts}],
         "generationConfig": {"temperature": temperature},
     }
+    if json_mode:
+        payload["generationConfig"]["responseMimeType"] = "application/json"
     if system:
         payload["systemInstruction"] = {"parts": [{"text": system}]}
     if web_search:

@@ -1,3 +1,16 @@
-# The dashboard, SEO, brainstorm, research and writing agents use only Python's standard library.
-# This is only needed for Chrome (browser) tasks:
+# The dashboard and the SEO, brainstorm, research and writing agents need only Python's standard library.
+
+# Chrome tasks
 browser-use>=0.7
+
+# Desktop tasks (screenshots + mouse/keyboard)
+mss>=9.0
+pyautogui>=0.9.54
+pillow>=10.0
+
+# Local voice: offline wake word, Whisper speech-to-text, Kokoro text-to-speech
+numpy>=1.26
+sounddevice>=0.4.6
+vosk>=0.3.45
+faster-whisper>=1.0
+kokoro-onnx>=0.4

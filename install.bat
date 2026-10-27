@@ -32,7 +32,7 @@ if not exist ".venv\Scripts\python.exe" (
 
 call ".venv\Scripts\activate.bat"
 python -m pip install --upgrade pip
-echo  Installing browser-use (the Chrome agent)...
+echo  Installing the Chrome, desktop and voice agents (a few minutes)...
 pip install -r requirements.txt
 if errorlevel 1 (
   echo  Install failed - check your internet connection and run install.bat again.
@@ -42,10 +42,15 @@ if errorlevel 1 (
 
 if not exist ".env" copy ".env.example" ".env" >nul
 
+echo  Downloading the offline voice models (about 500 MB, once)...
+python -m jarvis.voice
+if errorlevel 1 echo  Voice models didn't finish. AgentJ will use Chrome's speech until you run install.bat again.
+
 echo.
 echo  === Done! ===
 echo  1. Double-click start.bat to open the dashboard.
 echo  2. Open Settings and paste your free Gemini API key.
-echo  3. For Chrome tasks, double-click start-jarvis-chrome.bat first.
+echo  3. In Chrome, open chrome://inspect/#remote-debugging and switch it on (for Chrome tasks).
+echo  4. Click "wake word off" to turn it on, then say "AgentJ".
 echo.
 pause

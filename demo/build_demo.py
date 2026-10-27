@@ -14,21 +14,24 @@ markup = re.sub(r"<script>.*?</script>", "", body, flags=re.S)
 style = style.replace(":root{", ":root{color-scheme:dark;", 1)
 style = style.replace("position:sticky;top:0;", "position:sticky;top:env(safe-area-inset-top,0px);", 1)
 style += """
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header,main,.demo-strip{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-main{padding-block:20px}
-.demo-strip{background:#122b28;border-bottom:1px solid #2c6f69;color:#b2f5ea;font-size:13px;padding-block:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.demo-strip a{color:var(--accent)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10}
+.top-in,.layout,.demo-strip{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.layout{padding-block:20px}
+.demo-strip{background:var(--color-paper-2);border-bottom:var(--rule-hair) solid var(--color-rule);color:var(--color-ink-2);font-size:var(--text-sm);padding-block:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.demo-strip a{color:var(--color-ink)}
+.top{top:env(safe-area-inset-top,0px)}
+body::before{background:var(--color-paper)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 """
 
-strip = ('<div class="demo-strip"><b>Demo</b><span>Runs in this page with example data. Press <b>Resume</b> to let it work. '
-         'AI answers come from Claude (allow it when asked); Chrome and SEO fetching are simulated.</span>'
+strip = ('<div class="demo-strip"><strong>Demo</strong><span>Example data in your browser. Press resume queue to let it work. '
+         'Answers come from Claude (allow it when asked). Voice is typed here, and Chrome, desktop and SEO fetching are simulated.</span>'
          '<a href="https://github.com/raoof-pixel/AgentJ" target="_blank" rel="noopener noreferrer">Get the real app on GitHub</a></div>')
 
 out = (
     '<title>AgentJ</title>\n'
     '<meta name="claude:viewport-fit-sides" content="cover">\n'
+    '<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">\n'
     f"<style>{style}</style>\n"
     f"{strip}\n{markup}\n"
     f"<script>{open(os.path.join(HERE, 'mock.js'), encoding='utf-8').read()}</script>\n"

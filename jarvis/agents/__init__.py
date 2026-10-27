@@ -3,12 +3,13 @@
 import re
 
 from .. import db, llm
-from . import brainstorm, browser, research, seo, write
+from . import brainstorm, browser, desktop, research, seo, write
 
 AGENTS = {
     "brainstorm": brainstorm.run,
     "seo": seo.run,
     "browser": browser.run,
+    "desktop": desktop.run,
     "research": research.run,
     "write": write.run,
 }
@@ -18,6 +19,7 @@ URL_RE = re.compile(r"(https?://[^\s)>\]]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com
 KEYWORDS = [
     ("seo", r"\bseo\b|site audit|meta (title|description)|page ?speed|backlink|keyword rank"),
     ("brainstorm", r"brain ?storm|\bideas\b|name ideas|\bangles\b"),
+    ("desktop", r"\bdesktop\b|my (pc|computer|laptop|screen)|\bexcel\b|word doc|powerpoint|file explorer|\bfolder\b|notepad|downloads folder|\bapp\b on my|whatsapp desktop"),
     ("browser", r"youtube|\bchrome\b|go to |open (the )?(site|website|page)|log ?in|upload|search console|analytics|click|subscribe|comment on|reply to|check my (channel|inbox|dashboard)"),
     ("research", r"research|find out|compare|latest|news|competitor|look up|what is|who is"),
     ("write", r"\bwrite\b|draft|email|caption|post|article|blog|script|copy\b|rewrite|summari[sz]e"),
@@ -31,8 +33,9 @@ def classify(task):
             return kind
     try:
         answer = llm.generate(
-            "Classify this to-do item into exactly one word from: brainstorm, seo, browser, research, write.\n"
+            "Classify this to-do item into exactly one word from: brainstorm, seo, browser, desktop, research, write.\n"
             "browser = needs to operate a website in Chrome (click, log in, read a dashboard).\n"
+            "desktop = needs to operate apps or files on the PC itself (Excel, folders, desktop apps).\n"
             "research = needs current info from the web but no clicking.\n"
             f"Task: {task['title']}\n{task.get('details', '')}\nAnswer with one word only.",
             temperature=0,
