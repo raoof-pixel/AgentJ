@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentJ</title>
+<style>
+:root{
+  --bg:#0d1014; --panel:#151a20; --panel2:#1b2129; --line:#262e38; --text:#e7ecf2; --muted:#8b97a6;
+  --accent:#4fd1c5; --accent-ink:#06201d; --warn:#f6ad55; --bad:#fc8181; --good:#68d391; --blue:#63b3ed;
+  --r:12px; --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; --mono: Consolas, ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:7px 12px}
+button:hover{border-color:#3a4554}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.ghost{background:transparent}
+button.danger{color:var(--bad)}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #2c6f69;border-color:transparent}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(13,16,20,.92);backdrop-filter:blur(6px);z-index:5}
+.logo{font-weight:700;letter-spacing:.5px;font-size:17px;display:flex;align-items:center;gap:8px}
+.orb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#b2f5ea,var(--accent) 60%,#1d6b64);box-shadow:0 0 12px #4fd1c588}
+.orb.busy{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 22px #4fd1c5}}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+main{display:grid;grid-template-columns:360px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:1fr}.pills{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted)}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.seg button{flex:1;border:0;border-radius:0;background:transparent;color:var(--muted)}
+.seg button.on{background:var(--panel2);color:var(--text)}
+.tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tab{border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px}
+.tab.on{background:var(--panel2);color:var(--text)}
+.count{font-size:11px;background:var(--line);border-radius:99px;padding:1px 7px;margin-left:4px}
+.tab.on .count.hot{background:var(--warn);color:#2b1a00}
+.list{display:flex;flex-direction:column;gap:8px}
+.task{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
+.task:hover{border-color:#36414e}
+.task .t{font-weight:600}
+.task .meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.st-running{color:var(--blue);border-color:#2a4a66}.st-review{color:var(--warn);border-color:#5a4220}
+.st-done{color:var(--good);border-color:#24502f}.st-failed{color:var(--bad);border-color:#5b2a2a}
+.prio{width:4px;align-self:stretch;border-radius:4px;background:var(--line)}
+.prio.p1{background:var(--bad)}.prio.p2{background:var(--blue)}.prio.p3{background:#4a5568}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;border:1px dashed var(--line);border-radius:10px}
+.drawer{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:20}
+.drawer.open{display:block}
+.sheet{position:absolute;right:0;top:0;bottom:0;width:min(760px,100%);background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
+.sheet-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.sheet-head h3{margin:0;font-size:17px;flex:1}
+.sheet-body{padding:18px 20px;overflow:auto;flex:1}
+.sheet-foot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.md{line-height:1.6}
+.md h1,.md h2,.md h3,.md h4{text-transform:none;letter-spacing:0;color:var(--text);margin:18px 0 6px;font-size:15px}
+.md h2{font-size:16px}.md h1{font-size:18px}
+.md code{font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:5px;font-size:13px}
+.md pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto}
+.md pre code{background:none;padding:0}
+.md a{color:var(--accent)}
+.md blockquote{margin:8px 0;padding:6px 12px;border-left:3px solid var(--warn);background:#2a2110;border-radius:4px}
+.md ul,.md ol{padding-left:22px;margin:6px 0}
+.md hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+.md table{border-collapse:collapse;margin:8px 0}.md td,.md th{border:1px solid var(--line);padding:4px 8px}
+details.logs{margin-top:18px;border:1px solid var(--line);border-radius:8px}
+details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
+.loglines{font-family:var(--mono);font-size:12px;max-height:320px;overflow:auto;padding:8px 12px;border-top:1px solid var(--line);white-space:pre-wrap}
+.loglines .error{color:var(--bad)}.loglines .browser{color:#a3bffa}
+.loglines span.ts{color:#5c6b7d}
+.modal .sheet{width:min(560px,100%)}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;display:none;z-index:40}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #2c6f69;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.banner{background:#2a2110;border:1px solid #5a4220;color:#fbd38d;padding:10px 14px;border-radius:10px;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="orb" id="orb"></span> AgentJ</div>
+  <div class="pills">
+    <span class="pill" id="pWorker"><span class="dot"></span>Worker</span>
+    <span class="pill" id="pAI"><span class="dot"></span>AI</span>
+    <span class="pill" id="pChrome"><span class="dot"></span>Chrome</span>
+  </div>
+  <button class="ghost" id="btnPause">Pause</button>
+  <button id="btnSettings">Settings</button>
+</header>
+
+<main>
+  <section>
+    <div class="card">
+      <div class="seg">
+        <button class="on" data-mode="one">One task</button>
+        <button data-mode="list">Paste to-do list</button>
+      </div>
+      <form id="formOne">
+        <textarea id="title" rows="3" placeholder="What should I do?  e.g. SEO audit of canadiansme.ca" required></textarea>
+        <label>Details / instructions (optional)</label>
+        <textarea id="details" rows="3" placeholder="Links, tone, what a good result looks like…"></textarea>
+        <label>Type</label>
+        <div class="chips" id="typeChips"></div>
+        <div class="row">
+          <div><label>Priority</label>
+            <select id="priority"><option value="1">High</option><option value="2" selected>Normal</option><option value="3">Low</option></select></div>
+          <div><label>Repeat</label>
+            <select id="repeat"><option value="">No</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></div>
+        </div>
+        <div style="margin-top:14px"><button class="primary" style="width:100%">Add task</button></div>
+        <div class="hint">Ctrl+Enter to add · runs one task at a time, in order of priority</div>
+      </form>
+      <form id="formList" style="display:none">
+        <textarea id="listText" rows="10" placeholder="Paste your whole day:&#10;- brainstorm 10 YouTube video ideas for CanadianSME&#10;- SEO check b2bprint.ca homepage&#10;- open YouTube Studio and summarize last week's analytics"></textarea>
+        <div style="margin-top:12px"><button class="primary" style="width:100%" id="btnPlan">Split into tasks</button></div>
+        <div class="hint">AgentJ splits the list and picks the right agent for each line.</div>
+      </form>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Agents</h2>
+      <div class="hint" style="font-size:13px;line-height:1.7">
+        <b>Brainstorm</b> – ideas, angles, plans<br>
+        <b>SEO</b> – audits a URL + PageSpeed, gives fixes<br>
+        <b>Browser</b> – works in Chrome (YouTube, dashboards)<br>
+        <b>Research</b> – current info with web search<br>
+        <b>Write</b> – drafts, emails, posts, summaries<br>
+        Everything waits in <b>Review</b> for you to approve or redo.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="banner" id="banner"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="list" id="list"></div>
+  </section>
+</main>
+
+<div class="drawer" id="drawer"><div class="sheet">
+  <div class="sheet-head">
+    <h3 id="dTitle"></h3>
+    <button class="ghost" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="meta" id="dMeta" style="color:var(--muted);font-size:12px;margin-bottom:10px"></div>
+    <div class="md" id="dDetails" style="color:var(--muted)"></div>
+    <div class="md" id="dResult"></div>
+    <details class="logs" id="dLogsWrap"><summary>Activity log</summary><div class="loglines" id="dLogs"></div></details>
+  </div>
+  <div class="sheet-foot" id="dFoot"></div>
+</div></div>
+
+<div class="drawer modal" id="settings"><div class="sheet">
+  <div class="sheet-head"><h3>Settings</h3><button class="ghost" onclick="closeSettings()">✕</button></div>
+  <div class="sheet-body">
+    <h2>AI brain</h2>
+    <label>Text tasks use</label>
+    <select id="s_provider"><option value="gemini">Gemini (fast, recommended)</option><option value="ollama">Ollama (fully local, slower)</option></select>
+    <label>Gemini API key</label>
+    <input id="s_gemini_api_key" placeholder="Paste key from aistudio.google.com/apikey">
+    <label>Gemini model (leave empty = auto-pick newest Flash)</label>
+    <input id="s_gemini_model" placeholder="auto">
+    <label>Ollama URL / model</label>
+    <div class="row"><input id="s_ollama_url"><input id="s_ollama_model"></div>
+    <div style="margin-top:10px"><button id="btnTest">Test connection</button> <span id="testMsg" class="hint"></span></div>
+
+    <h2 style="margin-top:24px">Chrome</h2>
+    <label>Chrome tasks use</label>
+    <select id="s_chrome_mode">
+      <option value="cdp">Jarvis Chrome window (start-jarvis-chrome.bat) – recommended</option>
+      <option value="system">My main Chrome profile (Chrome must be closed)</option>
+    </select>
+    <label>Browser agent brain</label>
+    <select id="s_browser_provider"><option value="gemini">Gemini (recommended)</option><option value="ollama">Ollama (often fails on small models)</option></select>
+    <div class="row">
+      <div><label>Jarvis Chrome address</label><input id="s_chrome_cdp_url"></div>
+      <div><label>Main profile folder</label><input id="s_chrome_profile"></div>
+      <div><label>Max steps</label><input id="s_browser_max_steps"></div>
+    </div>
+
+    <h2 style="margin-top:24px">About you</h2>
+    <textarea id="s_about_me" rows="6" placeholder="Your businesses, websites, YouTube channels, audience, tone of voice… Every agent reads this."></textarea>
+    <div class="hint">Saved only on this computer (data/agentj.db).</div>
+  </div>
+  <div class="sheet-foot"><button class="primary" id="btnSave">Save</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TYPES = [["auto","Auto"],["brainstorm","Brainstorm"],["seo","SEO"],["browser","Browser"],["research","Research"],["write","Write"]];
+const TABS = [["review","Needs review"],["active","Queue"],["done","Done"],["failed","Failed"]];
+let state = {tasks:[], tab:"active", type:"auto", openId:null, status:{}};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(path, opts={}) {
+  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined});
+  return r.json();
+}
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",2500); }
+
+/* ---------- tiny safe markdown ---------- */
+function inline(s){
+  return s.replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+}
+function md(src){
+  const lines = esc(src||"").split("\n"); let out=[], list=null, code=false, buf=[];
+  const closeList=()=>{ if(list){ out.push(`</${list}>`); list=null; } };
+  for (let i=0;i<lines.length;i++){
+    const l = lines[i];
+    if (l.trim().startsWith("```")) { if(code){ out.push(`<pre><code>${buf.join("\n")}</code></pre>`); buf=[]; code=false; } else { closeList(); code=true; } continue; }
+    if (code){ buf.push(l); continue; }
+    let m;
+    if ((m=l.match(/^(#{1,4})\s+(.*)/))) { closeList(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
+    if (/^\s*(---|\*\*\*)\s*$/.test(l)) { closeList(); out.push("<hr>"); continue; }
+    if ((m=l.match(/^\s*[-*•]\s+(.*)/))) { if(list!=="ul"){ closeList(); out.push("<ul>"); list="ul"; } out.push(`<li>${inline(m[1])}</li>`); continue; }
+    if ((m=l.match(/^\s*\d+[.)]\s+(.*)/))) { if(list!=="ol"){ closeList(); out.push("<ol>"); list="ol"; } out.push(`<li>${inline(m[1])}</li>`); continue; }
+    if ((m=l.match(/^&gt;\s?(.*)/))) { closeList(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); continue; }
+    if (/^\s*\|.*\|\s*$/.test(l)) {
+      closeList(); const rows=[l]; while(i+1<lines.length && /^\s*\|.*\|\s*$/.test(lines[i+1])) rows.push(lines[++i]);
+      const cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+      const body=rows.filter(r=>!/^\s*\|[\s:|-]+\|\s*$/.test(r));
+      out.push("<table>"+body.map((r,ix)=>"<tr>"+cells(r).map(c=>ix===0?`<th>${inline(c)}</th>`:`<td>${inline(c)}</td>`).join("")+"</tr>").join("")+"</table>");
+      continue;
+    }
+    if (!l.trim()) { closeList(); out.push(""); continue; }
+    closeList(); out.push(`<p>${inline(l)}</p>`);
+  }
+  if (code) out.push(`<pre><code>${buf.join("\n")}</code></pre>`);
+  closeList(); return out.join("\n");
+}
+
+/* ---------- composer ---------- */
+function renderChips(){
+  $("#typeChips").innerHTML = TYPES.map(([k,v])=>`<button type="button" class="chip ${state.type===k?"on":""}" data-t="${k}">${v}</button>`).join("");
+}
+$("#typeChips").onclick = e => { const t=e.target.dataset.t; if(t){ state.type=t; renderChips(); } };
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on", x===b));
+  $("#formOne").style.display = b.dataset.mode==="one" ? "" : "none";
+  $("#formList").style.display = b.dataset.mode==="list" ? "" : "none";
+});
+$("#formOne").onsubmit = async e => {
+  e.preventDefault();
+  const title=$("#title").value.trim(); if(!title) return;
+  await api("/api/tasks",{method:"POST",body:{title,details:$("#details").value,type:state.type,priority:+$("#priority").value,repeat:$("#repeat").value}});
+  $("#title").value=""; $("#details").value=""; state.tab="active"; toast("Task added"); refresh();
+};
+$("#formOne").onkeydown = e => { if(e.key==="Enter" && (e.ctrlKey||e.metaKey)) $("#formOne").requestSubmit(); };
+$("#formList").onsubmit = async e => {
+  e.preventDefault(); const text=$("#listText").value.trim(); if(!text) return;
+  const b=$("#btnPlan"); b.disabled=true; b.innerHTML='<span class="spinner"></span> Splitting…';
+  const made = await api("/api/plan",{method:"POST",body:{text}});
+  b.disabled=false; b.textContent="Split into tasks"; $("#listText").value=""; state.tab="active";
+  toast(`${made.length} tasks added`); refresh();
+};
+
+/* ---------- list ---------- */
+function bucket(t){ return t.status==="review"?"review": (t.status==="queued"||t.status==="running")?"active": t.status==="done"?"done":"failed"; }
+function rel(ts){ if(!ts) return ""; const d=new Date(ts); return d.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}); }
+function renderList(){
+  const counts={review:0,active:0,done:0,failed:0}; state.tasks.forEach(t=>counts[bucket(t)]++);
+  $("#tabs").innerHTML = TABS.map(([k,v])=>`<button class="tab ${state.tab===k?"on":""}" data-k="${k}">${v}<span class="count ${k==="review"&&counts.review?"hot":""}">${counts[k]}</span></button>`).join("");
+  const items = state.tasks.filter(t=>bucket(t)===state.tab);
+  if(!items.length){ $("#list").innerHTML = `<div class="empty">${state.tab==="review"?"Nothing waiting for review.":state.tab==="active"?"No tasks queued. Add one on the left.":"Nothing here yet."}</div>`; return; }
+  $("#list").innerHTML = items.map(t=>{
+    const kind = t.type==="auto" ? (t.resolved_type||"auto") : t.type;
+    const later = t.due_date && t.due_date > new Date().toISOString().slice(0,10);
+    return `<div class="task" data-id="${t.id}">
+      <div class="prio p${t.priority}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="t">${esc(t.title)}</div>
+        <div class="meta">
+          <span class="badge st-${t.status}">${t.status==="running"?'<span class="spinner"></span> running':t.status}</span>
+          <span>${esc(kind)}</span>
+          ${t.repeat?`<span>↻ ${esc(t.repeat)}</span>`:""}
+          ${later?`<span>⏰ ${esc(t.due_date)}</span>`:""}
+          <span>${rel(t.updated_at)}</span>
+        </div>
+      </div></div>`;
+  }).join("");
+}
+$("#tabs").onclick = e => { const b=e.target.closest(".tab"); if(b){ state.tab=b.dataset.k; renderList(); } };
+$("#list").onclick = e => { const el=e.target.closest(".task"); if(el) openDrawer(+el.dataset.id); };
+
+/* ---------- drawer ---------- */
+async function openDrawer(id){ state.openId=id; state.openSig=null; $("#dLogs").innerHTML=""; $("#dLogsWrap").open=false; $("#drawer").classList.add("open"); await loadDrawer(); }
+function closeDrawer(){ state.openId=null; $("#drawer").classList.remove("open"); }
+$("#drawer").onclick = e => { if(e.target.id==="drawer") closeDrawer(); };
+async function loadDrawer(){
+  if(!state.openId) return;
+  const t = await api(`/api/tasks/${state.openId}`); if(t.error){ closeDrawer(); return; }
+  const logs = $("#dLogs"); const atBottom = logs.scrollTop+logs.clientHeight >= logs.scrollHeight-10;
+  logs.innerHTML = t.logs.map(l=>`<div class="${l.level}"><span class="ts">${l.ts.slice(11)}</span> ${esc(l.message)}</div>`).join("") || "No activity yet.";
+  if(atBottom) logs.scrollTop = logs.scrollHeight;
+  const sig = `${t.id}|${t.status}|${t.updated_at}`;
+  if (sig === state.openSig) return;   // nothing changed - don't wipe what you're typing
+  state.openSig = sig;
+  $("#dTitle").textContent = t.title;
+  $("#dMeta").innerHTML = `#${t.id} · ${esc(t.type==="auto"?(t.resolved_type||"auto"):t.type)} · <span class="badge st-${t.status}">${t.status}</span> · attempts ${t.attempts}${t.feedback?` · last feedback: “${esc(t.feedback)}”`:""}`;
+  $("#dDetails").innerHTML = t.details ? md(t.details) : "";
+  $("#dResult").innerHTML = t.status==="running" ? '<p><span class="spinner"></span> Working on it… the log below updates live.</p>'
+    : t.status==="queued" ? "<p style='color:var(--muted)'>Waiting in the queue.</p>" : md(t.result);
+  if(t.status==="running") $("#dLogsWrap").open = true;
+  const f=[];
+  if(t.status==="review") f.push(`<button class="primary" onclick="act(${t.id},'approve')">✓ Approve</button>`);
+  if(["review","done","failed","cancelled"].includes(t.status)) f.push(`<input id="fb" placeholder="What should change? (optional)" style="flex:1;min-width:200px"><button onclick="redo(${t.id})">↻ Redo</button>`);
+  if(["queued","running"].includes(t.status)) f.push(`<button onclick="act(${t.id},'cancel')">Cancel</button>`);
+  if(t.result) f.push(`<button class="ghost" onclick="copyResult(${t.id})">Copy</button>`);
+  f.push(`<button class="ghost danger" onclick="del(${t.id})">Delete</button>`);
+  $("#dFoot").innerHTML = f.join("");
+  state.openResult = t.result;
+}
+async function act(id,a){ state.openSig=null; const r=await api(`/api/tasks/${id}/${a}`,{method:"POST",body:{}}); if(a==="approve"&&r.next) toast(`Approved · next run ${r.next.due_date}`); else toast(a==="approve"?"Approved":"Done"); refresh(); loadDrawer(); }
+async function redo(id){ state.openSig=null; await api(`/api/tasks/${id}/redo`,{method:"POST",body:{feedback:($("#fb")||{}).value||""}}); toast("Sent back to the queue"); refresh(); loadDrawer(); }
+async function del(id){ if(!confirm("Delete this task?")) return; await api(`/api/tasks/${id}`,{method:"DELETE"}); closeDrawer(); refresh(); }
+function copyResult(){ navigator.clipboard.writeText(state.openResult||""); toast("Copied"); }
+
+/* ---------- settings ---------- */
+const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","about_me"];
+async function openSettings(){ const s=await api("/api/settings"); SKEYS.forEach(k=>$("#s_"+k).value=s[k]??""); $("#testMsg").textContent=""; $("#settings").classList.add("open"); }
+function closeSettings(){ $("#settings").classList.remove("open"); }
+async function saveSettings(){ const body={}; SKEYS.forEach(k=>body[k]=$("#s_"+k).value); await api("/api/settings",{method:"POST",body}); }
+$("#btnSettings").onclick = openSettings;
+$("#settings").onclick = e => { if(e.target.id==="settings") closeSettings(); };
+$("#btnSave").onclick = async () => { await saveSettings(); closeSettings(); toast("Saved"); refresh(); };
+$("#btnTest").onclick = async () => { $("#testMsg").innerHTML='<span class="spinner"></span> testing…'; await saveSettings(); const r=await api("/api/settings/test",{method:"POST",body:{}}); $("#testMsg").textContent=(r.ok?"✓ ":"✗ ")+r.message; };
+$("#btnPause").onclick = async () => { await api("/api/worker",{method:"POST",body:{paused:!state.status.paused}}); refresh(); };
+document.addEventListener("keydown", e => { if(e.key==="Escape"){ closeDrawer(); closeSettings(); } });
+
+/* ---------- status + polling ---------- */
+function pill(id, cls, text){ const p=$(id); p.innerHTML=`<span class="dot ${cls}"></span>${esc(text)}`; }
+async function refresh(){
+  try{
+    const [tasks,status] = await Promise.all([api("/api/tasks"), api("/api/status")]);
+    state.tasks=tasks; state.status=status; renderList();
+    $("#orb").classList.toggle("busy", !!status.current);
+    pill("#pWorker", status.paused?"warn":"ok", status.paused?"Paused":(status.current?`Working on #${status.current}`:"Idle"));
+    pill("#pAI", status.provider==="ollama"||status.has_key?"ok":"bad", status.provider==="ollama"?"Ollama":(status.has_key?"Gemini":"No API key"));
+    pill("#pChrome", status.chrome?"ok":"warn", status.chrome?"Chrome ready":"Chrome not open");
+    $("#btnPause").textContent = status.paused ? "Resume" : "Pause";
+    const ban=$("#banner");
+    if(status.provider!=="ollama" && !status.has_key){ ban.style.display="block"; ban.innerHTML='Add your free Gemini API key in <a href="#" onclick="openSettings();return false" style="color:inherit">Settings</a> so AgentJ can think.'; }
+    else ban.style.display="none";
+  }catch(e){ pill("#pWorker","bad","AgentJ not running"); }
+}
+renderChips(); refresh();
+setInterval(refresh, 3000);
+setInterval(()=>{ if(state.openId) loadDrawer(); }, 2500);
+</script>
+</body>
+</html>

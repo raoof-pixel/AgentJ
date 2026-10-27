@@ -1,0 +1,6 @@
+# Your private local data - never commit
+data/
+.env
+.venv/
+__pycache__/
+*.pyc

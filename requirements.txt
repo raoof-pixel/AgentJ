@@ -1,0 +1,3 @@
+# The dashboard, SEO, brainstorm, research and writing agents use only Python's standard library.
+# This is only needed for Chrome (browser) tasks:
+browser-use>=0.7
