@@ -3,7 +3,7 @@
 import threading
 import time
 import traceback
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from . import db
 from .agents import run_task
@@ -26,7 +26,41 @@ def schedule_repeat(task):
     if rep == "weekdays":
         while nxt.weekday() >= 5:
             nxt += timedelta(days=1)
-    return db.create_task(task["title"], task["details"], task["type"], task["priority"], rep, nxt.isoformat())
+    return db.create_task(task["title"], task["details"], task["type"], task["priority"], rep, nxt.isoformat(),
+                          task.get("playbook_id"))
+
+
+def _playbook_due(pb, now_dt):
+    sched = pb.get("schedule")
+    if not pb.get("enabled") or sched not in ("daily", "weekdays", "weekly"):
+        return False
+    today = now_dt.date().isoformat()
+    if pb.get("last_run_date") == today:
+        return False
+    if sched == "weekdays" and now_dt.weekday() >= 5:
+        return False
+    if sched == "weekly":
+        created = (pb.get("created_at") or today)[:10]
+        try:
+            if date.fromisoformat(created).weekday() != now_dt.weekday():
+                return False
+        except ValueError:
+            return False
+    run_time = pb.get("run_time") or "00:00"
+    return now_dt.strftime("%H:%M") >= run_time
+
+
+def run_scheduled_playbooks(now_dt=None):
+    """Queue today's run of every scheduled playbook whose time has come."""
+    now_dt = now_dt or datetime.now()
+    made = []
+    for pb in db.list_playbooks():
+        if _playbook_due(pb, now_dt):
+            db.update_playbook(pb["id"], last_run_date=now_dt.date().isoformat())
+            t = db.create_task(pb["name"], "", pb.get("type") or "auto", 2, "", "", pb["id"])
+            db.log(t["id"], f"Created automatically by the '{pb['name']}' playbook schedule")
+            made.append(t)
+    return made
 
 
 def _process(task):
@@ -51,8 +85,12 @@ def _process(task):
 
 def _loop():
     db.reset_stuck_running()
+    last_sched = 0
     while True:
         try:
+            if time.time() - last_sched > 30:
+                last_sched = time.time()
+                run_scheduled_playbooks()
             if db.get_settings().get("worker_paused") != "1":
                 task = db.next_queued()
                 if task:

@@ -8,7 +8,7 @@
 :root{
   --bg:#0d1014; --panel:#151a20; --panel2:#1b2129; --line:#262e38; --text:#e7ecf2; --muted:#8b97a6;
   --accent:#4fd1c5; --accent-ink:#06201d; --warn:#f6ad55; --bad:#fc8181; --good:#68d391; --blue:#63b3ed;
-  --r:12px; --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; --mono: Consolas, ui-monospace, monospace;
+  --r:12px; --font:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif; --mono:Consolas,ui-monospace,monospace;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--font)}
@@ -18,10 +18,11 @@ button:hover{border-color:#3a4554}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 button.ghost{background:transparent}
 button.danger{color:var(--bad)}
+button:disabled{opacity:.6;cursor:default}
 input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 textarea{resize:vertical}
 input:focus,select:focus,textarea:focus{outline:2px solid #2c6f69;border-color:transparent}
-header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(13,16,20,.92);backdrop-filter:blur(6px);z-index:5}
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(13,16,20,.94);backdrop-filter:blur(6px);z-index:5}
 .logo{font-weight:700;letter-spacing:.5px;font-size:17px;display:flex;align-items:center;gap:8px}
 .orb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#b2f5ea,var(--accent) 60%,#1d6b64);box-shadow:0 0 12px #4fd1c588}
 .orb.busy{animation:pulse 1.2s infinite}
@@ -30,12 +31,17 @@ header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:
 .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 10px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
 .dot.ok{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
-main{display:grid;grid-template-columns:360px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
+.mic{width:44px;height:44px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:18px;border:1px solid #2c6f69;background:#0f2a27}
+.mic.on{background:var(--bad);border-color:var(--bad);animation:micpulse 1s infinite}
+@keyframes micpulse{50%{box-shadow:0 0 0 8px #fc818133}}
+.voicebar{display:none;max-width:1400px;margin:12px auto 0;padding:0 20px}
+.voicebar .inner{background:#0f2a27;border:1px solid #2c6f69;border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center}
+.voicebar .heard{flex:1;font-size:15px}
+main{display:grid;grid-template-columns:350px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
 @media(max-width:900px){main{grid-template-columns:1fr}.pills{display:none}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600}
-.row{display:flex;gap:8px}
-.row>*{flex:1}
+.row{display:flex;gap:8px}.row>*{flex:1}
 label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{font-size:12px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--muted)}
@@ -47,18 +53,29 @@ label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .tab{border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px}
 .tab.on{background:var(--panel2);color:var(--text)}
 .count{font-size:11px;background:var(--line);border-radius:99px;padding:1px 7px;margin-left:4px}
-.tab.on .count.hot{background:var(--warn);color:#2b1a00}
+.count.hot{background:var(--warn);color:#2b1a00}
 .list{display:flex;flex-direction:column;gap:8px}
 .task{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
 .task:hover{border-color:#36414e}
 .task .t{font-weight:600}
+.task.done .t{color:var(--muted);text-decoration:line-through}
 .task .meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.check{width:22px;height:22px;border-radius:50%;border:2px solid #3a4554;flex:none;display:grid;place-items:center;font-size:12px;margin-top:1px}
+.check.running{border-color:var(--blue);border-top-color:transparent;animation:spin .9s linear infinite}
+.check.review{border-color:var(--warn);color:var(--warn)}
+.check.done{border-color:var(--good);background:var(--good);color:#0b2914}
+.check.failed{border-color:var(--bad);color:var(--bad)}
 .badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
 .st-running{color:var(--blue);border-color:#2a4a66}.st-review{color:var(--warn);border-color:#5a4220}
 .st-done{color:var(--good);border-color:#24502f}.st-failed{color:var(--bad);border-color:#5b2a2a}
-.prio{width:4px;align-self:stretch;border-radius:4px;background:var(--line)}
-.prio.p1{background:var(--bad)}.prio.p2{background:var(--blue)}.prio.p3{background:#4a5568}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:4px 0 14px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
+.today-head{display:flex;justify-content:space-between;align-items:baseline}
+.today-head b{font-size:18px}
 .empty{color:var(--muted);text-align:center;padding:40px 10px;border:1px dashed var(--line);border-radius:10px}
+.pb{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.pb .t{font-weight:600}
+.pb .steps{color:var(--muted);font-size:13px;white-space:pre-wrap;max-height:80px;overflow:hidden;margin:6px 0}
 .drawer{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:20}
 .drawer.open{display:block}
 .sheet{position:absolute;right:0;top:0;bottom:0;width:min(760px,100%);background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
@@ -82,12 +99,14 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
 .loglines{font-family:var(--mono);font-size:12px;max-height:320px;overflow:auto;padding:8px 12px;border-top:1px solid var(--line);white-space:pre-wrap}
 .loglines .error{color:var(--bad)}.loglines .browser{color:#a3bffa}
 .loglines span.ts{color:#5c6b7d}
-.modal .sheet{width:min(560px,100%)}
+.modal .sheet{width:min(600px,100%)}
 .hint{font-size:12px;color:var(--muted);margin-top:4px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;display:none;z-index:40}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;display:none;z-index:40;max-width:90vw}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid #2c6f69;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .banner{background:#2a2110;border:1px solid #5a4220;color:#fbd38d;padding:10px 14px;border-radius:10px;margin-bottom:14px;display:none}
+.banner a{color:inherit}
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--panel2)}
 </style>
 </head>
 <body>
@@ -98,9 +117,16 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
     <span class="pill" id="pAI"><span class="dot"></span>AI</span>
     <span class="pill" id="pChrome"><span class="dot"></span>Chrome</span>
   </div>
+  <button class="mic" id="btnMic" title="Talk to AgentJ (Alt+J)">🎙</button>
   <button class="ghost" id="btnPause">Pause</button>
   <button id="btnSettings">Settings</button>
 </header>
+
+<div class="voicebar" id="voicebar"><div class="inner">
+  <span class="spinner" id="vSpin" style="display:none"></span>
+  <div class="heard" id="heard">Listening…</div>
+  <button class="ghost" id="vStop">Done</button>
+</div></div>
 
 <main>
   <section>
@@ -122,23 +148,21 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
             <select id="repeat"><option value="">No</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></div>
         </div>
         <div style="margin-top:14px"><button class="primary" style="width:100%">Add task</button></div>
-        <div class="hint">Ctrl+Enter to add · runs one task at a time, in order of priority</div>
+        <div class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to add · or press <kbd>Alt</kbd>+<kbd>J</kbd> and just talk</div>
       </form>
       <form id="formList" style="display:none">
         <textarea id="listText" rows="10" placeholder="Paste your whole day:&#10;- brainstorm 10 YouTube video ideas for CanadianSME&#10;- SEO check b2bprint.ca homepage&#10;- open YouTube Studio and summarize last week's analytics"></textarea>
         <div style="margin-top:12px"><button class="primary" style="width:100%" id="btnPlan">Split into tasks</button></div>
-        <div class="hint">AgentJ splits the list and picks the right agent for each line.</div>
+        <div class="hint">AgentJ splits the list, picks the right agent and matches your playbooks.</div>
       </form>
     </div>
     <div class="card" style="margin-top:16px">
-      <h2>Agents</h2>
-      <div class="hint" style="font-size:13px;line-height:1.7">
-        <b>Brainstorm</b> – ideas, angles, plans<br>
-        <b>SEO</b> – audits a URL + PageSpeed, gives fixes<br>
-        <b>Browser</b> – works in Chrome (YouTube, dashboards)<br>
-        <b>Research</b> – current info with web search<br>
-        <b>Write</b> – drafts, emails, posts, summaries<br>
-        Everything waits in <b>Review</b> for you to approve or redo.
+      <h2>Talk to it</h2>
+      <div class="hint" style="font-size:13px;line-height:1.8">
+        “Do an SEO audit of b2bprint.ca and brainstorm 5 blog ideas”<br>
+        “Run my YouTube comments playbook”<br>
+        “What's left?” · “Pause” · “Resume”<br>
+        Teach repeated tasks in <b>Playbooks</b> — just explain how you do it, out loud.
       </div>
     </div>
   </section>
@@ -146,17 +170,15 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
   <section>
     <div class="banner" id="banner"></div>
     <div class="tabs" id="tabs"></div>
-    <div class="list" id="list"></div>
+    <div id="view"></div>
   </section>
 </main>
 
+<!-- task drawer -->
 <div class="drawer" id="drawer"><div class="sheet">
-  <div class="sheet-head">
-    <h3 id="dTitle"></h3>
-    <button class="ghost" onclick="closeDrawer()">✕</button>
-  </div>
+  <div class="sheet-head"><h3 id="dTitle"></h3><button class="ghost" onclick="closeDrawer()">✕</button></div>
   <div class="sheet-body">
-    <div class="meta" id="dMeta" style="color:var(--muted);font-size:12px;margin-bottom:10px"></div>
+    <div id="dMeta" style="color:var(--muted);font-size:12px;margin-bottom:10px"></div>
     <div class="md" id="dDetails" style="color:var(--muted)"></div>
     <div class="md" id="dResult"></div>
     <details class="logs" id="dLogsWrap"><summary>Activity log</summary><div class="loglines" id="dLogs"></div></details>
@@ -164,6 +186,38 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
   <div class="sheet-foot" id="dFoot"></div>
 </div></div>
 
+<!-- playbook editor -->
+<div class="drawer modal" id="pbModal"><div class="sheet">
+  <div class="sheet-head"><h3 id="pbHead">New playbook</h3><button class="ghost" onclick="closePb()">✕</button></div>
+  <div class="sheet-body">
+    <label style="margin-top:0">Explain how you do this task (type, or press 🎙 and talk)</label>
+    <div class="row" style="align-items:flex-start">
+      <textarea id="pbExplain" rows="6" style="flex:1" placeholder="Every morning I open YouTube Studio, go to Comments, reply to new questions in a friendly tone, and note any that need me…"></textarea>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button id="pbDictate">🎙 Dictate</button>
+      <button id="pbDraft" class="primary">Turn into playbook ↓</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <label>Name</label><input id="pb_name" placeholder="YouTube comments check">
+    <label>Trigger phrases (comma separated – what you'll say)</label><input id="pb_triggers" placeholder="youtube comments, reply to comments">
+    <div class="row">
+      <div><label>Agent</label><select id="pb_type"><option value="auto">Auto</option><option value="browser">Browser (Chrome)</option><option value="seo">SEO</option><option value="brainstorm">Brainstorm</option><option value="research">Research</option><option value="write">Write</option></select></div>
+      <div><label>Run automatically</label><select id="pb_schedule"><option value="">Only when I ask</option><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></div>
+      <div><label>At</label><input id="pb_run_time" type="time"></div>
+    </div>
+    <label>Steps (the agent follows these exactly)</label>
+    <textarea id="pb_steps" rows="10"></textarea>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pb_enabled" style="width:auto" checked> Enabled</label>
+  </div>
+  <div class="sheet-foot">
+    <button class="primary" id="pbSave">Save playbook</button>
+    <button id="pbRun">Save &amp; run now</button>
+    <button class="ghost danger" id="pbDelete" style="margin-left:auto">Delete</button>
+  </div>
+</div></div>
+
+<!-- settings -->
 <div class="drawer modal" id="settings"><div class="sheet">
   <div class="sheet-head"><h3>Settings</h3><button class="ghost" onclick="closeSettings()">✕</button></div>
   <div class="sheet-body">
@@ -171,7 +225,7 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
     <label>Text tasks use</label>
     <select id="s_provider"><option value="gemini">Gemini (fast, recommended)</option><option value="ollama">Ollama (fully local, slower)</option></select>
     <label>Gemini API key</label>
-    <input id="s_gemini_api_key" placeholder="Paste key from aistudio.google.com/apikey">
+    <input id="s_gemini_api_key" placeholder="Paste key from aistudio.google.com/apikey" autocomplete="off">
     <label>Gemini model (leave empty = auto-pick newest Flash)</label>
     <input id="s_gemini_model" placeholder="auto">
     <label>Ollama URL / model</label>
@@ -181,15 +235,24 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
     <h2 style="margin-top:24px">Chrome</h2>
     <label>Chrome tasks use</label>
     <select id="s_chrome_mode">
-      <option value="cdp">Jarvis Chrome window (start-jarvis-chrome.bat) – recommended</option>
-      <option value="system">My main Chrome profile (Chrome must be closed)</option>
+      <option value="own">My own Chrome, while I use it (recommended)</option>
+      <option value="cdp">A separate Jarvis Chrome window (start-jarvis-chrome.bat)</option>
+      <option value="system">My main profile, launched by AgentJ (Chrome must be closed)</option>
     </select>
+    <div class="hint">For “My own Chrome”: open <b>chrome://inspect/#remote-debugging</b> in Chrome once and switch it ON. Chrome asks you to <b>Allow</b> each time a task starts.</div>
     <label>Browser agent brain</label>
     <select id="s_browser_provider"><option value="gemini">Gemini (recommended)</option><option value="ollama">Ollama (often fails on small models)</option></select>
     <div class="row">
-      <div><label>Jarvis Chrome address</label><input id="s_chrome_cdp_url"></div>
+      <div><label>Jarvis window address</label><input id="s_chrome_cdp_url"></div>
       <div><label>Main profile folder</label><input id="s_chrome_profile"></div>
       <div><label>Max steps</label><input id="s_browser_max_steps"></div>
+    </div>
+
+    <h2 style="margin-top:24px">Voice</h2>
+    <div class="row">
+      <div><label>Language</label>
+        <select id="s_voice_lang"><option value="en-IN">English (India)</option><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="en-CA">English (Canada)</option><option value="hi-IN">Hindi</option><option value="te-IN">Telugu</option><option value="ur-IN">Urdu</option></select></div>
+      <div><label>Speak replies out loud</label><select id="s_speak_replies"><option value="1">Yes</option><option value="0">No</option></select></div>
     </div>
 
     <h2 style="margin-top:24px">About you</h2>
@@ -202,170 +265,284 @@ details.logs summary{padding:8px 12px;cursor:pointer;color:var(--muted)}
 <div class="toast" id="toast"></div>
 
 <script>
-const TYPES = [["auto","Auto"],["brainstorm","Brainstorm"],["seo","SEO"],["browser","Browser"],["research","Research"],["write","Write"]];
-const TABS = [["review","Needs review"],["active","Queue"],["done","Done"],["failed","Failed"]];
-let state = {tasks:[], tab:"active", type:"auto", openId:null, status:{}};
+const TYPES=[["auto","Auto"],["brainstorm","Brainstorm"],["seo","SEO"],["browser","Browser"],["research","Research"],["write","Write"]];
+const TABS=[["today","Today"],["review","Needs review"],["active","Queue"],["done","Done"],["failed","Failed"],["playbooks","Playbooks"]];
+let state={tasks:[],playbooks:[],tab:"today",type:"auto",openId:null,openSig:null,status:{},editingPb:null};
 
-const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-async function api(path, opts={}) {
-  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined});
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(path,opts={}){
+  const r=await fetch(path,{headers:{"Content-Type":"application/json"},...opts,body:opts.body?JSON.stringify(opts.body):undefined});
   return r.json();
 }
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",2500); }
+const post=(p,b={})=>api(p,{method:"POST",body:b});
+function toast(msg){const t=$("#toast");t.textContent=msg;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",3500);}
+const todayISO=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);};
 
-/* ---------- tiny safe markdown ---------- */
+/* ---------- tiny safe markdown (escapes everything first) ---------- */
 function inline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
     .replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>")
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
-    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)"]+)/g,'$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
 }
 function md(src){
-  const lines = esc(src||"").split("\n"); let out=[], list=null, code=false, buf=[];
-  const closeList=()=>{ if(list){ out.push(`</${list}>`); list=null; } };
-  for (let i=0;i<lines.length;i++){
-    const l = lines[i];
-    if (l.trim().startsWith("```")) { if(code){ out.push(`<pre><code>${buf.join("\n")}</code></pre>`); buf=[]; code=false; } else { closeList(); code=true; } continue; }
-    if (code){ buf.push(l); continue; }
+  const lines=esc(src||"").split("\n");let out=[],list=null,code=false,buf=[];
+  const closeList=()=>{if(list){out.push(`</${list}>`);list=null;}};
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(l.trim().startsWith("```")){if(code){out.push(`<pre><code>${buf.join("\n")}</code></pre>`);buf=[];code=false;}else{closeList();code=true;}continue;}
+    if(code){buf.push(l);continue;}
     let m;
-    if ((m=l.match(/^(#{1,4})\s+(.*)/))) { closeList(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); continue; }
-    if (/^\s*(---|\*\*\*)\s*$/.test(l)) { closeList(); out.push("<hr>"); continue; }
-    if ((m=l.match(/^\s*[-*•]\s+(.*)/))) { if(list!=="ul"){ closeList(); out.push("<ul>"); list="ul"; } out.push(`<li>${inline(m[1])}</li>`); continue; }
-    if ((m=l.match(/^\s*\d+[.)]\s+(.*)/))) { if(list!=="ol"){ closeList(); out.push("<ol>"); list="ol"; } out.push(`<li>${inline(m[1])}</li>`); continue; }
-    if ((m=l.match(/^&gt;\s?(.*)/))) { closeList(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); continue; }
-    if (/^\s*\|.*\|\s*$/.test(l)) {
-      closeList(); const rows=[l]; while(i+1<lines.length && /^\s*\|.*\|\s*$/.test(lines[i+1])) rows.push(lines[++i]);
+    if((m=l.match(/^(#{1,4})\s+(.*)/))){closeList();out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`);continue;}
+    if(/^\s*(---|\*\*\*)\s*$/.test(l)){closeList();out.push("<hr>");continue;}
+    if((m=l.match(/^\s*[-*•]\s+(.*)/))){if(list!=="ul"){closeList();out.push("<ul>");list="ul";}out.push(`<li>${inline(m[1])}</li>`);continue;}
+    if((m=l.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=="ol"){closeList();out.push("<ol>");list="ol";}out.push(`<li>${inline(m[1])}</li>`);continue;}
+    if((m=l.match(/^&gt;\s?(.*)/))){closeList();out.push(`<blockquote>${inline(m[1])}</blockquote>`);continue;}
+    if(/^\s*\|.*\|\s*$/.test(l)){
+      closeList();const rows=[l];while(i+1<lines.length&&/^\s*\|.*\|\s*$/.test(lines[i+1]))rows.push(lines[++i]);
       const cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
       const body=rows.filter(r=>!/^\s*\|[\s:|-]+\|\s*$/.test(r));
       out.push("<table>"+body.map((r,ix)=>"<tr>"+cells(r).map(c=>ix===0?`<th>${inline(c)}</th>`:`<td>${inline(c)}</td>`).join("")+"</tr>").join("")+"</table>");
       continue;
     }
-    if (!l.trim()) { closeList(); out.push(""); continue; }
-    closeList(); out.push(`<p>${inline(l)}</p>`);
+    if(!l.trim()){closeList();out.push("");continue;}
+    closeList();out.push(`<p>${inline(l)}</p>`);
   }
-  if (code) out.push(`<pre><code>${buf.join("\n")}</code></pre>`);
-  closeList(); return out.join("\n");
+  if(code)out.push(`<pre><code>${buf.join("\n")}</code></pre>`);
+  closeList();return out.join("\n");
 }
+
+/* ---------- voice ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,listening=false,voiceTarget=null,finalText="";
+function speak(text){
+  if(!state.status.speak||!window.speechSynthesis||!text)return;
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=state.status.voice_lang||"en-IN";u.rate=1.05;speechSynthesis.speak(u);
+}
+function startListening(target){
+  if(!SR){toast("Voice needs Google Chrome or Edge.");return;}
+  if(listening){stopListening();return;}
+  voiceTarget=target||null;finalText="";
+  rec=new SR();rec.lang=state.status.voice_lang||"en-IN";rec.interimResults=true;rec.continuous=true;
+  rec.onresult=e=>{
+    let interim="";
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)finalText+=r[0].transcript+" ";else interim+=r[0].transcript;}
+    const shown=(finalText+interim).trim();
+    if(voiceTarget){voiceTarget.value=(voiceTarget.dataset.before||"")+shown;}
+    else $("#heard").textContent=shown||"Listening…";
+  };
+  rec.onerror=e=>{if(e.error==="not-allowed")toast("Microphone blocked – allow it in the address bar.");else if(e.error!=="no-speech")toast("Voice error: "+e.error);};
+  rec.onend=()=>{const was=listening;listening=false;$("#btnMic").classList.remove("on");$("#pbDictate").textContent="🎙 Dictate";if(was)handleSpeech();};
+  if(voiceTarget){voiceTarget.dataset.before=voiceTarget.value?voiceTarget.value.trimEnd()+" ":"";$("#pbDictate").textContent="■ Stop";}
+  else{$("#voicebar").style.display="block";$("#heard").textContent="Listening… speak your tasks, then click Done";$("#vSpin").style.display="none";}
+  listening=true;$("#btnMic").classList.toggle("on",!voiceTarget);rec.start();
+}
+function stopListening(){if(rec){rec.stop();}}
+async function handleSpeech(){
+  const text=finalText.trim();
+  if(voiceTarget){voiceTarget=null;return;}
+  if(!text){$("#voicebar").style.display="none";return;}
+  $("#heard").textContent="“"+text+"”";$("#vSpin").style.display="inline-block";
+  const r=await post("/api/voice",{text});
+  $("#vSpin").style.display="none";$("#heard").textContent=r.reply||"Done.";speak(r.reply);
+  setTimeout(()=>{$("#voicebar").style.display="none";},4000);
+  if(r.created&&r.created.length){state.tab="today";}
+  refresh();
+}
+$("#btnMic").onclick=()=>startListening(null);
+$("#vStop").onclick=()=>{if(listening)stopListening();else $("#voicebar").style.display="none";};
+document.addEventListener("keydown",e=>{
+  if(e.altKey&&(e.key==="j"||e.key==="J")){e.preventDefault();startListening(null);}
+  if(e.key==="Escape"){closeDrawer();closeSettings();closePb();}
+});
 
 /* ---------- composer ---------- */
-function renderChips(){
-  $("#typeChips").innerHTML = TYPES.map(([k,v])=>`<button type="button" class="chip ${state.type===k?"on":""}" data-t="${k}">${v}</button>`).join("");
-}
-$("#typeChips").onclick = e => { const t=e.target.dataset.t; if(t){ state.type=t; renderChips(); } };
-document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
-  document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on", x===b));
-  $("#formOne").style.display = b.dataset.mode==="one" ? "" : "none";
-  $("#formList").style.display = b.dataset.mode==="list" ? "" : "none";
+function renderChips(){$("#typeChips").innerHTML=TYPES.map(([k,v])=>`<button type="button" class="chip ${state.type===k?"on":""}" data-t="${k}">${v}</button>`).join("");}
+$("#typeChips").onclick=e=>{const t=e.target.dataset.t;if(t){state.type=t;renderChips();}};
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));
+  $("#formOne").style.display=b.dataset.mode==="one"?"":"none";
+  $("#formList").style.display=b.dataset.mode==="list"?"":"none";
 });
-$("#formOne").onsubmit = async e => {
-  e.preventDefault();
-  const title=$("#title").value.trim(); if(!title) return;
-  await api("/api/tasks",{method:"POST",body:{title,details:$("#details").value,type:state.type,priority:+$("#priority").value,repeat:$("#repeat").value}});
-  $("#title").value=""; $("#details").value=""; state.tab="active"; toast("Task added"); refresh();
+$("#formOne").onsubmit=async e=>{
+  e.preventDefault();const title=$("#title").value.trim();if(!title)return;
+  const t=await post("/api/tasks",{title,details:$("#details").value,type:state.type,priority:+$("#priority").value,repeat:$("#repeat").value});
+  $("#title").value="";$("#details").value="";state.tab="today";
+  toast(t.playbook_id?"Task added (using your playbook)":"Task added");refresh();
 };
-$("#formOne").onkeydown = e => { if(e.key==="Enter" && (e.ctrlKey||e.metaKey)) $("#formOne").requestSubmit(); };
-$("#formList").onsubmit = async e => {
-  e.preventDefault(); const text=$("#listText").value.trim(); if(!text) return;
-  const b=$("#btnPlan"); b.disabled=true; b.innerHTML='<span class="spinner"></span> Splitting…';
-  const made = await api("/api/plan",{method:"POST",body:{text}});
-  b.disabled=false; b.textContent="Split into tasks"; $("#listText").value=""; state.tab="active";
-  toast(`${made.length} tasks added`); refresh();
+$("#formOne").onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))$("#formOne").requestSubmit();};
+$("#formList").onsubmit=async e=>{
+  e.preventDefault();const text=$("#listText").value.trim();if(!text)return;
+  const b=$("#btnPlan");b.disabled=true;b.innerHTML='<span class="spinner"></span> Splitting…';
+  const made=await post("/api/plan",{text});
+  b.disabled=false;b.textContent="Split into tasks";$("#listText").value="";state.tab="today";
+  toast(`${made.length} tasks added`);refresh();
 };
 
-/* ---------- list ---------- */
-function bucket(t){ return t.status==="review"?"review": (t.status==="queued"||t.status==="running")?"active": t.status==="done"?"done":"failed"; }
-function rel(ts){ if(!ts) return ""; const d=new Date(ts); return d.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}); }
-function renderList(){
-  const counts={review:0,active:0,done:0,failed:0}; state.tasks.forEach(t=>counts[bucket(t)]++);
-  $("#tabs").innerHTML = TABS.map(([k,v])=>`<button class="tab ${state.tab===k?"on":""}" data-k="${k}">${v}<span class="count ${k==="review"&&counts.review?"hot":""}">${counts[k]}</span></button>`).join("");
-  const items = state.tasks.filter(t=>bucket(t)===state.tab);
-  if(!items.length){ $("#list").innerHTML = `<div class="empty">${state.tab==="review"?"Nothing waiting for review.":state.tab==="active"?"No tasks queued. Add one on the left.":"Nothing here yet."}</div>`; return; }
-  $("#list").innerHTML = items.map(t=>{
-    const kind = t.type==="auto" ? (t.resolved_type||"auto") : t.type;
-    const later = t.due_date && t.due_date > new Date().toISOString().slice(0,10);
-    return `<div class="task" data-id="${t.id}">
-      <div class="prio p${t.priority}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="t">${esc(t.title)}</div>
-        <div class="meta">
-          <span class="badge st-${t.status}">${t.status==="running"?'<span class="spinner"></span> running':t.status}</span>
-          <span>${esc(kind)}</span>
-          ${t.repeat?`<span>↻ ${esc(t.repeat)}</span>`:""}
-          ${later?`<span>⏰ ${esc(t.due_date)}</span>`:""}
-          <span>${rel(t.updated_at)}</span>
-        </div>
-      </div></div>`;
-  }).join("");
+/* ---------- views ---------- */
+function bucket(t){return t.status==="review"?"review":(t.status==="queued"||t.status==="running")?"active":t.status==="done"?"done":t.status==="cancelled"?"cancelled":"failed";}
+function isToday(t){
+  const today=todayISO();
+  if(t.status==="queued"||t.status==="running"||t.status==="review")return !t.due_date||t.due_date<=today;
+  return (t.finished_at||t.updated_at||"").slice(0,10)===today && t.status!=="cancelled";
 }
-$("#tabs").onclick = e => { const b=e.target.closest(".tab"); if(b){ state.tab=b.dataset.k; renderList(); } };
-$("#list").onclick = e => { const el=e.target.closest(".task"); if(el) openDrawer(+el.dataset.id); };
+function rel(ts){if(!ts)return"";const d=new Date(ts);return d.toLocaleString([],{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
+function pbName(id){const p=state.playbooks.find(p=>p.id===id);return p?p.name:"";}
+function taskRow(t){
+  const kind=t.type==="auto"?(t.resolved_type||"auto"):t.type;
+  const later=t.due_date&&t.due_date>todayISO();
+  const icon={review:"!",done:"✓",failed:"✕",cancelled:"–"}[t.status]||"";
+  return `<div class="task ${t.status==="done"?"done":""}" data-id="${t.id}">
+    <div class="check ${t.status}">${icon}</div>
+    <div style="flex:1;min-width:0">
+      <div class="t">${esc(t.title)}</div>
+      <div class="meta">
+        <span class="badge st-${t.status}">${t.status==="review"?"needs your review":esc(t.status)}</span>
+        <span>${esc(kind)}</span>
+        ${t.playbook_id?`<span>📘 ${esc(pbName(t.playbook_id))}</span>`:""}
+        ${t.priority===1?`<span style="color:var(--bad)">high</span>`:""}
+        ${t.repeat?`<span>↻ ${esc(t.repeat)}</span>`:""}
+        ${later?`<span>⏰ ${esc(t.due_date)}</span>`:""}
+        <span>${rel(t.updated_at)}</span>
+      </div>
+    </div></div>`;
+}
+function render(){
+  const counts={today:0,review:0,active:0,done:0,failed:0,playbooks:state.playbooks.length};
+  state.tasks.forEach(t=>{const b=bucket(t);if(b in counts)counts[b]++;if(isToday(t))counts.today++;});
+  $("#tabs").innerHTML=TABS.map(([k,v])=>`<button class="tab ${state.tab===k?"on":""}" data-k="${k}">${v}<span class="count ${k==="review"&&counts.review?"hot":""}">${counts[k]}</span></button>`).join("");
+  if(state.tab==="playbooks")return renderPlaybooks();
+  let items,head="";
+  if(state.tab==="today"){
+    items=state.tasks.filter(isToday);
+    const done=items.filter(t=>t.status==="done").length,pct=items.length?Math.round(done*100/items.length):0;
+    const d=new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"});
+    head=`<div class="today-head"><b>${d}</b><span class="hint">${done} of ${items.length} done</span></div><div class="progress"><div style="width:${pct}%"></div></div>`;
+  } else items=state.tasks.filter(t=>bucket(t)===state.tab);
+  const empty={today:"Nothing on today's list. Add a task, paste your day, or press 🎙 and talk.",review:"Nothing waiting for review.",active:"Queue is empty.",done:"Nothing done yet.",failed:"No failures 🎉"}[state.tab];
+  $("#view").innerHTML=head+(items.length?`<div class="list">${items.map(taskRow).join("")}</div>`:`<div class="empty">${empty}</div>`);
+}
+function renderPlaybooks(){
+  const sched=p=>p.schedule?`${p.schedule}${p.run_time?" at "+p.run_time:""}`:"on request";
+  $("#view").innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="hint" style="font-size:13px">Playbooks are how you teach AgentJ your repeated tasks. Say a trigger phrase (or add a task that mentions it) and it follows your steps.</div>
+      <button class="primary" onclick="openPb(null)">+ New playbook</button></div>`+
+    (state.playbooks.length?`<div class="list">`+state.playbooks.map(p=>`<div class="pb">
+      <div style="display:flex;gap:10px;align-items:center"><div class="t" style="flex:1">📘 ${esc(p.name)}</div>
+        <span class="badge">${esc(p.type)}</span><span class="badge">${esc(sched(p))}</span>${p.enabled?"":'<span class="badge st-failed">off</span>'}</div>
+      ${p.triggers?`<div class="hint">Say: ${esc(p.triggers)}</div>`:""}
+      <div class="steps">${esc(p.steps)}</div>
+      <div style="display:flex;gap:8px"><button onclick="runPb(${p.id})">▶ Run now</button><button class="ghost" onclick="openPb(${p.id})">Edit</button></div>
+    </div>`).join("")+`</div>`:`<div class="empty">No playbooks yet. Click “New playbook”, press 🎙 and explain how you do a task you repeat.</div>`);
+}
+$("#tabs").onclick=e=>{const b=e.target.closest(".tab");if(b){state.tab=b.dataset.k;render();}};
+$("#view").onclick=e=>{const el=e.target.closest(".task");if(el)openDrawer(+el.dataset.id);};
 
-/* ---------- drawer ---------- */
-async function openDrawer(id){ state.openId=id; state.openSig=null; $("#dLogs").innerHTML=""; $("#dLogsWrap").open=false; $("#drawer").classList.add("open"); await loadDrawer(); }
-function closeDrawer(){ state.openId=null; $("#drawer").classList.remove("open"); }
-$("#drawer").onclick = e => { if(e.target.id==="drawer") closeDrawer(); };
+/* ---------- task drawer ---------- */
+async function openDrawer(id){state.openId=id;state.openSig=null;$("#dLogs").innerHTML="";$("#dLogsWrap").open=false;$("#drawer").classList.add("open");await loadDrawer();}
+function closeDrawer(){state.openId=null;$("#drawer").classList.remove("open");}
+$("#drawer").onclick=e=>{if(e.target.id==="drawer")closeDrawer();};
 async function loadDrawer(){
-  if(!state.openId) return;
-  const t = await api(`/api/tasks/${state.openId}`); if(t.error){ closeDrawer(); return; }
-  const logs = $("#dLogs"); const atBottom = logs.scrollTop+logs.clientHeight >= logs.scrollHeight-10;
-  logs.innerHTML = t.logs.map(l=>`<div class="${l.level}"><span class="ts">${l.ts.slice(11)}</span> ${esc(l.message)}</div>`).join("") || "No activity yet.";
-  if(atBottom) logs.scrollTop = logs.scrollHeight;
-  const sig = `${t.id}|${t.status}|${t.updated_at}`;
-  if (sig === state.openSig) return;   // nothing changed - don't wipe what you're typing
-  state.openSig = sig;
-  $("#dTitle").textContent = t.title;
-  $("#dMeta").innerHTML = `#${t.id} · ${esc(t.type==="auto"?(t.resolved_type||"auto"):t.type)} · <span class="badge st-${t.status}">${t.status}</span> · attempts ${t.attempts}${t.feedback?` · last feedback: “${esc(t.feedback)}”`:""}`;
-  $("#dDetails").innerHTML = t.details ? md(t.details) : "";
-  $("#dResult").innerHTML = t.status==="running" ? '<p><span class="spinner"></span> Working on it… the log below updates live.</p>'
-    : t.status==="queued" ? "<p style='color:var(--muted)'>Waiting in the queue.</p>" : md(t.result);
-  if(t.status==="running") $("#dLogsWrap").open = true;
+  if(!state.openId)return;
+  const t=await api(`/api/tasks/${state.openId}`);if(t.error){closeDrawer();return;}
+  const logs=$("#dLogs");const atBottom=logs.scrollTop+logs.clientHeight>=logs.scrollHeight-10;
+  logs.innerHTML=t.logs.map(l=>`<div class="${esc(l.level)}"><span class="ts">${esc(l.ts.slice(11))}</span> ${esc(l.message)}</div>`).join("")||"No activity yet.";
+  if(atBottom)logs.scrollTop=logs.scrollHeight;
+  const sig=`${t.id}|${t.status}|${t.updated_at}`;
+  if(sig===state.openSig)return;
+  state.openSig=sig;
+  $("#dTitle").textContent=t.title;
+  $("#dMeta").innerHTML=`#${t.id} · ${esc(t.type==="auto"?(t.resolved_type||"auto"):t.type)} · <span class="badge st-${esc(t.status)}">${esc(t.status)}</span> · attempts ${t.attempts}${t.playbook_id?` · 📘 ${esc(pbName(t.playbook_id))}`:""}${t.feedback?` · last feedback: “${esc(t.feedback)}”`:""}`;
+  $("#dDetails").innerHTML=t.details?md(t.details):"";
+  $("#dResult").innerHTML=t.status==="running"?'<p><span class="spinner"></span> Working on it… the log below updates live. For Chrome tasks, click <b>Allow</b> if Chrome asks.</p>'
+    :t.status==="queued"?"<p style='color:var(--muted)'>Waiting in the queue.</p>":md(t.result);
+  if(t.status==="running")$("#dLogsWrap").open=true;
   const f=[];
-  if(t.status==="review") f.push(`<button class="primary" onclick="act(${t.id},'approve')">✓ Approve</button>`);
-  if(["review","done","failed","cancelled"].includes(t.status)) f.push(`<input id="fb" placeholder="What should change? (optional)" style="flex:1;min-width:200px"><button onclick="redo(${t.id})">↻ Redo</button>`);
-  if(["queued","running"].includes(t.status)) f.push(`<button onclick="act(${t.id},'cancel')">Cancel</button>`);
-  if(t.result) f.push(`<button class="ghost" onclick="copyResult(${t.id})">Copy</button>`);
+  if(t.status==="review")f.push(`<button class="primary" onclick="act(${t.id},'approve')">✓ Approve</button>`);
+  if(["review","done","failed","cancelled"].includes(t.status))f.push(`<input id="fb" placeholder="What should change? (optional)" style="flex:1;min-width:200px"><button onclick="redo(${t.id})">↻ Redo</button>`);
+  if(["queued","running"].includes(t.status))f.push(`<button onclick="act(${t.id},'cancel')">Cancel</button>`);
+  if(t.result)f.push(`<button class="ghost" onclick="copyResult()">Copy</button>`);
+  if(t.status==="review"||t.status==="done")f.push(`<button class="ghost" onclick="saveAsPlaybook(${t.id})" title="Turn this into a reusable playbook">📘 Save as playbook</button>`);
   f.push(`<button class="ghost danger" onclick="del(${t.id})">Delete</button>`);
-  $("#dFoot").innerHTML = f.join("");
-  state.openResult = t.result;
+  $("#dFoot").innerHTML=f.join("");
+  state.openTask=t;
 }
-async function act(id,a){ state.openSig=null; const r=await api(`/api/tasks/${id}/${a}`,{method:"POST",body:{}}); if(a==="approve"&&r.next) toast(`Approved · next run ${r.next.due_date}`); else toast(a==="approve"?"Approved":"Done"); refresh(); loadDrawer(); }
-async function redo(id){ state.openSig=null; await api(`/api/tasks/${id}/redo`,{method:"POST",body:{feedback:($("#fb")||{}).value||""}}); toast("Sent back to the queue"); refresh(); loadDrawer(); }
-async function del(id){ if(!confirm("Delete this task?")) return; await api(`/api/tasks/${id}`,{method:"DELETE"}); closeDrawer(); refresh(); }
-function copyResult(){ navigator.clipboard.writeText(state.openResult||""); toast("Copied"); }
+async function act(id,a){state.openSig=null;const r=await post(`/api/tasks/${id}/${a}`);toast(a==="approve"?(r.next?`Approved · next run ${r.next.due_date}`:"Approved"):"Done");refresh();loadDrawer();}
+async function redo(id){state.openSig=null;await post(`/api/tasks/${id}/redo`,{feedback:($("#fb")||{}).value||""});toast("Sent back to the queue");refresh();loadDrawer();}
+async function del(id){if(!confirm("Delete this task?"))return;await post(`/api/tasks/${id}/delete`);closeDrawer();refresh();}
+function copyResult(){navigator.clipboard.writeText((state.openTask||{}).result||"");toast("Copied");}
+function saveAsPlaybook(){const t=state.openTask;closeDrawer();openPb(null,{name:t.title.slice(0,60),type:t.type==="auto"?(t.resolved_type||"auto"):t.type,steps:t.details||"",explain:`Task: ${t.title}\n${t.details||""}`});}
+
+/* ---------- playbooks ---------- */
+const PBF=["name","triggers","type","steps","schedule","run_time"];
+function openPb(id,prefill){
+  const p=id?state.playbooks.find(x=>x.id===id):(prefill||{});
+  state.editingPb=id||null;
+  $("#pbHead").textContent=id?"Edit playbook":"New playbook";
+  PBF.forEach(k=>$("#pb_"+k).value=p[k]||(k==="type"?"auto":""));
+  $("#pb_enabled").checked=id?!!p.enabled:true;
+  $("#pbExplain").value=p.explain||"";
+  $("#pbDelete").style.display=id?"":"none";
+  $("#pbModal").classList.add("open");
+}
+function closePb(){$("#pbModal").classList.remove("open");if(listening&&voiceTarget)stopListening();}
+$("#pbModal").onclick=e=>{if(e.target.id==="pbModal")closePb();};
+$("#pbDictate").onclick=()=>startListening($("#pbExplain"));
+$("#pbDraft").onclick=async()=>{
+  const text=$("#pbExplain").value.trim();if(!text){toast("Explain the task first (type or 🎙).");return;}
+  const b=$("#pbDraft");b.disabled=true;b.innerHTML='<span class="spinner"></span> Writing steps…';
+  const d=await post("/api/playbooks/draft",{text});
+  b.disabled=false;b.textContent="Turn into playbook ↓";
+  if(d.error){toast(d.error);return;}
+  PBF.forEach(k=>{if(d[k])$("#pb_"+k).value=d[k];});
+  toast("Check the steps, then save.");
+};
+async function savePb(){
+  const body={};PBF.forEach(k=>body[k]=$("#pb_"+k).value);body.enabled=$("#pb_enabled").checked?1:0;
+  if(!body.name.trim()){toast("Give it a name");return null;}
+  const r=state.editingPb?await post(`/api/playbooks/${state.editingPb}/update`,body):await post("/api/playbooks",body);
+  if(r.error){toast(r.error);return null;}
+  state.editingPb=r.id;return r;
+}
+$("#pbSave").onclick=async()=>{if(await savePb()){closePb();state.tab="playbooks";toast("Playbook saved");refresh();}};
+$("#pbRun").onclick=async()=>{const p=await savePb();if(p){closePb();await runPb(p.id);}};
+$("#pbDelete").onclick=async()=>{if(!state.editingPb||!confirm("Delete this playbook?"))return;await post(`/api/playbooks/${state.editingPb}/delete`);closePb();refresh();};
+async function runPb(id){await post(`/api/playbooks/${id}/run`);state.tab="today";toast("Playbook started");refresh();}
 
 /* ---------- settings ---------- */
-const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","about_me"];
-async function openSettings(){ const s=await api("/api/settings"); SKEYS.forEach(k=>$("#s_"+k).value=s[k]??""); $("#testMsg").textContent=""; $("#settings").classList.add("open"); }
-function closeSettings(){ $("#settings").classList.remove("open"); }
-async function saveSettings(){ const body={}; SKEYS.forEach(k=>body[k]=$("#s_"+k).value); await api("/api/settings",{method:"POST",body}); }
-$("#btnSettings").onclick = openSettings;
-$("#settings").onclick = e => { if(e.target.id==="settings") closeSettings(); };
-$("#btnSave").onclick = async () => { await saveSettings(); closeSettings(); toast("Saved"); refresh(); };
-$("#btnTest").onclick = async () => { $("#testMsg").innerHTML='<span class="spinner"></span> testing…'; await saveSettings(); const r=await api("/api/settings/test",{method:"POST",body:{}}); $("#testMsg").textContent=(r.ok?"✓ ":"✗ ")+r.message; };
-$("#btnPause").onclick = async () => { await api("/api/worker",{method:"POST",body:{paused:!state.status.paused}}); refresh(); };
-document.addEventListener("keydown", e => { if(e.key==="Escape"){ closeDrawer(); closeSettings(); } });
+const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","about_me","voice_lang","speak_replies"];
+async function openSettings(){const s=await api("/api/settings");SKEYS.forEach(k=>$("#s_"+k).value=s[k]??"");$("#testMsg").textContent="";$("#settings").classList.add("open");}
+function closeSettings(){$("#settings").classList.remove("open");}
+async function saveSettings(){const body={};SKEYS.forEach(k=>body[k]=$("#s_"+k).value);await post("/api/settings",body);}
+$("#btnSettings").onclick=openSettings;
+$("#settings").onclick=e=>{if(e.target.id==="settings")closeSettings();};
+$("#btnSave").onclick=async()=>{await saveSettings();closeSettings();toast("Saved");refresh();};
+$("#btnTest").onclick=async()=>{$("#testMsg").innerHTML='<span class="spinner"></span> testing…';await saveSettings();const r=await post("/api/settings/test");$("#testMsg").textContent=(r.ok?"✓ ":"✗ ")+r.message;};
+$("#btnPause").onclick=async()=>{await post("/api/worker",{paused:!state.status.paused});refresh();};
 
 /* ---------- status + polling ---------- */
-function pill(id, cls, text){ const p=$(id); p.innerHTML=`<span class="dot ${cls}"></span>${esc(text)}`; }
+function pill(id,cls,text){$(id).innerHTML=`<span class="dot ${cls}"></span>${esc(text)}`;}
 async function refresh(){
   try{
-    const [tasks,status] = await Promise.all([api("/api/tasks"), api("/api/status")]);
-    state.tasks=tasks; state.status=status; renderList();
-    $("#orb").classList.toggle("busy", !!status.current);
-    pill("#pWorker", status.paused?"warn":"ok", status.paused?"Paused":(status.current?`Working on #${status.current}`:"Idle"));
-    pill("#pAI", status.provider==="ollama"||status.has_key?"ok":"bad", status.provider==="ollama"?"Ollama":(status.has_key?"Gemini":"No API key"));
-    pill("#pChrome", status.chrome?"ok":"warn", status.chrome?"Chrome ready":"Chrome not open");
-    $("#btnPause").textContent = status.paused ? "Resume" : "Pause";
+    const [tasks,status,pbs]=await Promise.all([api("/api/tasks"),api("/api/status"),api("/api/playbooks")]);
+    state.tasks=tasks;state.status=status;state.playbooks=pbs;
+    if(!document.querySelector("#view .pb input, #view input:focus"))render();
+    $("#orb").classList.toggle("busy",!!status.current);
+    pill("#pWorker",status.paused?"warn":"ok",status.paused?"Paused":(status.current?`Working on #${status.current}`:"Idle"));
+    pill("#pAI",status.provider==="ollama"||status.has_key?"ok":"bad",status.provider==="ollama"?"Ollama":(status.has_key?"Gemini":"No API key"));
+    pill("#pChrome",status.chrome?"ok":"warn",status.chrome?`Chrome: ${status.chrome}`:"Chrome not connected");
+    $("#btnPause").textContent=status.paused?"Resume":"Pause";
     const ban=$("#banner");
-    if(status.provider!=="ollama" && !status.has_key){ ban.style.display="block"; ban.innerHTML='Add your free Gemini API key in <a href="#" onclick="openSettings();return false" style="color:inherit">Settings</a> so AgentJ can think.'; }
+    if(status.provider!=="ollama"&&!status.has_key){ban.style.display="block";ban.innerHTML='Add your free Gemini API key in <a href="#" onclick="openSettings();return false">Settings</a> so AgentJ can think.';}
+    else if(status.chrome_mode==="own"&&!status.chrome){ban.style.display="block";ban.innerHTML='To let AgentJ use <b>your</b> Chrome: open <b>chrome://inspect/#remote-debugging</b> in Chrome and switch remote debugging <b>ON</b> (one time). Chrome 144+ needed.';}
     else ban.style.display="none";
-  }catch(e){ pill("#pWorker","bad","AgentJ not running"); }
+  }catch(e){pill("#pWorker","bad","AgentJ not running");}
 }
-renderChips(); refresh();
-setInterval(refresh, 3000);
-setInterval(()=>{ if(state.openId) loadDrawer(); }, 2500);
+renderChips();refresh();
+setInterval(refresh,3000);
+setInterval(()=>{if(state.openId)loadDrawer();},2500);
 </script>
 </body>
 </html>

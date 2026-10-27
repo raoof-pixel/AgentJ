@@ -23,13 +23,17 @@ DEFAULT_SETTINGS = {
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_model": "qwen3:4b",
     "browser_provider": "gemini",  # browser tasks need a strong model; gemini recommended
-    "chrome_mode": "cdp",          # cdp = Jarvis Chrome window (start-jarvis-chrome.bat); system = your main Chrome profile
+    "chrome_mode": "own",          # own = your running Chrome; cdp = Jarvis Chrome window; system = main profile (Chrome closed)
     "chrome_cdp_url": "http://127.0.0.1:9222",
     "chrome_profile": "Default",
     "browser_max_steps": "25",
     "about_me": "",
     "worker_paused": "0",
+    "speak_replies": "1",          # AgentJ answers voice commands out loud
+    "voice_lang": "en-IN",         # speech recognition language
 }
+
+REPEATS = ("", "daily", "weekdays", "weekly")
 
 
 def now():
@@ -81,8 +85,24 @@ def _init(c):
             key TEXT PRIMARY KEY,
             value TEXT
         );
+        CREATE TABLE IF NOT EXISTS playbooks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            triggers TEXT DEFAULT '',
+            type TEXT DEFAULT 'auto',
+            steps TEXT DEFAULT '',
+            schedule TEXT DEFAULT '',
+            run_time TEXT DEFAULT '',
+            enabled INTEGER DEFAULT 1,
+            last_run_date TEXT DEFAULT '',
+            created_at TEXT,
+            updated_at TEXT
+        );
         """
     )
+    cols = {r[1] for r in c.execute("PRAGMA table_info(tasks)").fetchall()}
+    if "playbook_id" not in cols:
+        c.execute("ALTER TABLE tasks ADD COLUMN playbook_id INTEGER DEFAULT NULL")
     c.commit()
 
 
@@ -118,16 +138,28 @@ def save_settings(values):
 
 # ---------- tasks ----------
 
-def create_task(title, details="", type="auto", priority=2, repeat="", due_date=""):
+def _int(v, default):
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def create_task(title, details="", type="auto", priority=2, repeat="", due_date="", playbook_id=None):
     if type not in TYPES:
         type = "auto"
+    if repeat not in REPEATS:
+        repeat = ""
+    priority = min(3, max(1, _int(priority, 2)))
+    due_date = str(due_date or "")[:10]
     ts = now()
     with _lock:
         c = conn()
         cur = c.execute(
-            "INSERT INTO tasks(title, details, type, priority, repeat, due_date, created_at, updated_at) "
-            "VALUES(?,?,?,?,?,?,?,?)",
-            (title.strip(), details.strip(), type, int(priority), repeat, due_date, ts, ts),
+            "INSERT INTO tasks(title, details, type, priority, repeat, due_date, playbook_id, created_at, updated_at) "
+            "VALUES(?,?,?,?,?,?,?,?,?)",
+            (str(title).strip()[:500], str(details or "").strip()[:20000], type, priority, repeat, due_date,
+             playbook_id, ts, ts),
         )
         c.commit()
         return get_task(cur.lastrowid)
@@ -148,7 +180,12 @@ def list_tasks():
     return [dict(r) for r in rows]
 
 
+TASK_COLUMNS = {"title", "details", "type", "resolved_type", "status", "priority", "repeat", "result",
+                "feedback", "attempts", "started_at", "finished_at", "due_date", "playbook_id"}
+
+
 def update_task(task_id, **fields):
+    fields = {k: v for k, v in fields.items() if k in TASK_COLUMNS}  # column names are never user-controlled
     if not fields:
         return get_task(task_id)
     fields["updated_at"] = now()
@@ -208,4 +245,70 @@ def get_logs(task_id, limit=500):
 
 
 def export_all():
-    return json.dumps({"tasks": list_tasks()}, indent=2)
+    return json.dumps({"tasks": list_tasks(), "playbooks": list_playbooks()}, indent=2)
+
+
+# ---------- playbooks (how to do repeated tasks) ----------
+
+PLAYBOOK_COLUMNS = {"name", "triggers", "type", "steps", "schedule", "run_time", "enabled", "last_run_date"}
+
+
+def _clean_playbook(f):
+    out = {k: v for k, v in f.items() if k in PLAYBOOK_COLUMNS}
+    if "type" in out and out["type"] not in TYPES:
+        out["type"] = "auto"
+    if "schedule" in out and out["schedule"] not in REPEATS:
+        out["schedule"] = ""
+    if "run_time" in out:
+        rt = str(out["run_time"] or "")[:5]
+        ok = len(rt) == 5 and rt[2] == ":" and rt.replace(":", "").isdigit() and int(rt[:2]) < 24 and int(rt[3:]) < 60
+        out["run_time"] = rt if ok else ""
+    if "enabled" in out:
+        out["enabled"] = 1 if str(out["enabled"]) in ("1", "true", "True") else 0
+    for k in ("name", "triggers", "steps"):
+        if k in out:
+            out[k] = str(out[k] or "")[:20000]
+    return out
+
+
+def create_playbook(**f):
+    f = _clean_playbook(f)
+    if not f.get("name", "").strip():
+        raise ValueError("name required")
+    f["created_at"] = f["updated_at"] = now()
+    cols = ", ".join(f)
+    with _lock:
+        c = conn()
+        cur = c.execute(f"INSERT INTO playbooks({cols}) VALUES({', '.join('?' * len(f))})", tuple(f.values()))
+        c.commit()
+        return get_playbook(cur.lastrowid)
+
+
+def get_playbook(pid):
+    with _lock:
+        return _row(conn().execute("SELECT * FROM playbooks WHERE id=?", (pid,)).fetchone())
+
+
+def list_playbooks():
+    with _lock:
+        return [dict(r) for r in conn().execute("SELECT * FROM playbooks ORDER BY name COLLATE NOCASE").fetchall()]
+
+
+def update_playbook(pid, **f):
+    f = _clean_playbook(f)
+    if not f:
+        return get_playbook(pid)
+    f["updated_at"] = now()
+    with _lock:
+        c = conn()
+        c.execute(f"UPDATE playbooks SET {', '.join(k + '=?' for k in f)} WHERE id=?", (*f.values(), pid))
+        c.commit()
+    return get_playbook(pid)
+
+
+def delete_playbook(pid):
+    with _lock:
+        c = conn()
+        c.execute("UPDATE tasks SET playbook_id=NULL WHERE playbook_id=?", (pid,))
+        c.execute("DELETE FROM playbooks WHERE id=?", (pid,))
+        c.commit()

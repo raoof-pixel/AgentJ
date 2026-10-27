@@ -18,7 +18,32 @@ A lightweight personal agent that runs on **your own PC**. You give it your to-d
 
 You can pick the type yourself or leave it on **Auto**. You can also paste your whole day under **Paste to-do list** and AgentJ splits it into tasks.
 
-Other features: priorities, repeating tasks (daily, weekdays or weekly; the next copy is queued when you approve one), a live activity log, Redo with feedback, and Pause/Resume.
+### Talk to it
+
+Click 🎙 (or press **Alt+J**), say what you want, then click **Done**. For example:
+
+- "Do an SEO audit of b2bprint.ca and brainstorm five blog ideas" adds two tasks.
+- "Run my YouTube comments playbook" starts that playbook.
+- "What's left?", "Pause" and "Resume" control the queue.
+
+AgentJ answers out loud. You can turn that off and choose your language in Settings → Voice. Voice uses Chrome's built-in speech recognition, so open the dashboard in Chrome or Edge and allow the microphone. Chrome processes the speech on Google's servers. Your tasks and results stay on your PC.
+
+### Playbooks: teach it your repeated tasks
+
+Open the **Playbooks** tab and click **New playbook**. Then press 🎙 and explain how you do the task, the way you'd explain it to a new assistant. Click **Turn into playbook** and AgentJ writes it up as:
+
+- **Name and trigger phrases:** what you'll say to start it.
+- **Agent:** Browser for anything done in Chrome.
+- **Steps:** the agent follows these exactly. Edit them freely.
+- **Schedule:** optional, for example weekdays at 09:30. It's added to Today's list automatically.
+
+Any task, typed or spoken, that mentions a trigger phrase uses that playbook. You can also turn a good result into a playbook with **📘 Save as playbook**.
+
+### Dashboard
+
+- **Today** is your to-do list for the day, with a progress bar. Tasks show as ○ queued, ◐ running, ! needs your review and ✓ done.
+- **Needs review** is where you approve a result or Redo it with feedback.
+- Other features: priorities, repeating tasks, a live activity log, and Pause/Resume.
 
 ## Setup (Windows, about 5 minutes)
 
@@ -29,15 +54,22 @@ Other features: priorities, repeating tasks (daily, weekdays or weekly; the next
 5. Click **Settings**, paste a free Gemini key from https://aistudio.google.com/apikey, then click **Test connection**.
 6. Fill in **About you** (your businesses, websites, channels, tone). Every agent reads it.
 
-### Chrome tasks
+### Chrome tasks in your own Chrome
 
-Double-click **`start-jarvis-chrome.bat`**. It opens a separate "Jarvis" Chrome window with its own profile:
+By default, AgentJ works in **your normal Chrome**, the one you're already using, with all your logins.
 
-- Log in to YouTube, Search Console and other sites **once** in that window. The logins are saved in `data/chrome-profile`.
-- Your normal Chrome isn't touched and can stay open.
-- Keep the Jarvis window open while Chrome tasks run. You can watch the agent work.
+1. Update Chrome to version 144 or newer (Menu → Help → About Google Chrome).
+2. In Chrome, open `chrome://inspect/#remote-debugging` and switch remote debugging **ON**. You only do this once.
+3. When a Chrome task starts, Chrome asks whether to allow the connection. Click **Allow**. A banner shows while the agent is in control.
 
-To use your **main** Chrome profile with all its existing logins, change **Settings → Chrome tasks use** to "My main Chrome profile". In that mode Chrome must be fully closed while a task runs.
+The agent works in a new tab and is told not to touch your other tabs. You can watch it work.
+
+While remote debugging is on, programs on your PC can ask to control Chrome, and Chrome asks you each time. Only click **Allow** when an AgentJ task has just started, and switch it off when you don't need it.
+
+Other options in **Settings → Chrome tasks use**:
+
+- **A separate Jarvis Chrome window** (`start-jarvis-chrome.bat`): a separate profile. Log in once there and the logins are kept.
+- **My main profile, launched by AgentJ:** Chrome must be fully closed first.
 
 **Safety:** the browser agent is told it may browse, read and fill drafts, but it must **never** publish, post, send, delete, buy or change settings. When a task needs one of those actions, it stops and reports `NEEDS APPROVAL: …` so you can do the final click yourself. It also never types passwords.
 
@@ -59,11 +91,11 @@ Install [Ollama](https://ollama.com) and run `ollama pull qwen3:4b`. Then set **
 run.py                     start server + open dashboard
 jarvis/
   server.py                local web dashboard + JSON API (127.0.0.1 only)
-  worker.py                runs one task at a time, handles repeats
+  worker.py                runs one task at a time, repeats + scheduled playbooks
   db.py                    SQLite storage (data/agentj.db)
   llm.py                   Gemini (REST) + Ollama, auto-picks newest Gemini Flash model
   agents/
-    __init__.py            router (keyword rules, then AI classification)
+    __init__.py            router (playbook match, keyword rules, then AI classification)
     brainstorm.py  seo.py  browser.py  research.py  write.py
   static/index.html        the dashboard (single file, no build step)
 ```

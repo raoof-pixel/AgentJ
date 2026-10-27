@@ -66,10 +66,27 @@ def system_prompt(task):
     return "\n".join(lines)
 
 
+def match_playbook(text):
+    """Find a playbook whose name or trigger phrase appears in the text."""
+    t = (text or "").lower()
+    best, best_len = None, 0
+    for pb in db.list_playbooks():
+        phrases = [pb["name"]] + [x for x in re.split(r"[,\n]", pb.get("triggers") or "")]
+        for ph in phrases:
+            ph = ph.strip().lower()
+            if len(ph) >= 3 and ph in t and len(ph) > best_len:
+                best, best_len = pb, len(ph)
+    return best
+
+
 def task_prompt(task):
     p = f"TASK: {task['title']}"
     if task.get("details"):
         p += f"\n\nDETAILS:\n{task['details']}"
+    pb = db.get_playbook(task["playbook_id"]) if task.get("playbook_id") else None
+    if pb and pb.get("steps"):
+        p += (f"\n\nPLAYBOOK '{pb['name']}' - the user's own instructions for this repeated task. "
+              f"Follow them step by step:\n{pb['steps']}")
     if task.get("feedback"):
         p += (
             f"\n\nThis is a redo. Your previous result was:\n---\n{task.get('result', '')[:6000]}\n---\n"
@@ -79,7 +96,13 @@ def task_prompt(task):
 
 
 def run_task(task):
-    kind = task["type"] if task["type"] != "auto" else (task.get("resolved_type") or classify(task))
+    kind = task["type"]
+    if kind == "auto" and task.get("playbook_id"):
+        pb = db.get_playbook(task["playbook_id"])
+        if pb and pb.get("type") in AGENTS:
+            kind = pb["type"]
+    if kind not in AGENTS:
+        kind = task.get("resolved_type") or classify(task)
     db.update_task(task["id"], resolved_type=kind)
     db.log(task["id"], f"Agent selected: {kind}")
     return AGENTS[kind](task, ctx={"system": system_prompt(task), "prompt": task_prompt(task), "url": find_url(task)})
