@@ -137,10 +137,7 @@ def _make_browser(settings, task_id):
                 "Keep Chrome open, then press Redo."
             )
         db.log(task_id, "Connecting to your Chrome - click **Allow** on the prompt Chrome shows")
-        try:
-            return Browser(cdp_url=endpoint, keep_alive=True)
-        except TypeError:
-            return Browser(cdp_url=endpoint)
+        return _connect(Browser, endpoint, settings, task_id)
     cdp = settings.get("chrome_cdp_url", "http://127.0.0.1:9222")
     name = _cdp_alive(cdp)
     if not name:
@@ -149,10 +146,26 @@ def _make_browser(settings, task_id):
             "then press 'Redo' on this task."
         )
     db.log(task_id, f"Connected to {name} at {cdp}")
+    return _connect(Browser, cdp, settings, task_id)
+
+
+def allowed_domains(settings):
+    raw = settings.get("browser_allowed_domains", "") or ""
+    return [d.strip().lower() for d in raw.replace("\n", ",").split(",") if d.strip()]
+
+
+def _connect(Browser, endpoint, settings, task_id):
+    domains = allowed_domains(settings)
+    kwargs = {"cdp_url": endpoint, "keep_alive": True}
+    if domains:
+        kwargs["allowed_domains"] = domains
+        db.log(task_id, "Agent limited to: " + ", ".join(domains))
     try:
-        return Browser(cdp_url=cdp, keep_alive=True)
+        return Browser(**kwargs)
     except TypeError:
-        return Browser(cdp_url=cdp)
+        if domains:
+            raise RuntimeError("This browser-use version can't restrict sites. Run install.bat to update it.")
+        return Browser(cdp_url=endpoint)
 
 
 async def _run_async(task, ctx, settings):

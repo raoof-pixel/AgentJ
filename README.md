@@ -73,6 +73,14 @@ Other options in **Settings → Chrome tasks use**:
 
 **Safety:** the browser agent is told it may browse, read and fill drafts, but it must **never** publish, post, send, delete, buy or change settings. When a task needs one of those actions, it stops and reports `NEEDS APPROVAL: …` so you can do the final click yourself. It also never types passwords.
 
+## Security
+
+- The dashboard only listens on your own PC (127.0.0.1). Requests from other websites, cross-site form posts and DNS-rebinding tricks are refused.
+- Results and logs are escaped before they're shown, so content copied from web pages can't run code in the dashboard.
+- The SEO auditor only fetches public websites. It refuses your PC, your router and Chrome's debug port.
+- **Settings → Sites the Chrome agent may open** limits the browser agent to the sites you list. This is the best protection against a web page trying to lure it somewhere else. Use it.
+- Your Gemini key is stored only in `data/agentj.db`, sent only to Google, and masked in the dashboard.
+
 ## Example tasks
 
 - `SEO audit of https://canadiansme.ca`

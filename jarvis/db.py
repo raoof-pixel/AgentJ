@@ -27,6 +27,8 @@ DEFAULT_SETTINGS = {
     "chrome_cdp_url": "http://127.0.0.1:9222",
     "chrome_profile": "Default",
     "browser_max_steps": "25",
+    # comma-separated sites the Chrome agent may open (empty = any). Wildcards like *.google.com work.
+    "browser_allowed_domains": "",
     "about_me": "",
     "worker_paused": "0",
     "speak_replies": "1",          # AgentJ answers voice commands out loud

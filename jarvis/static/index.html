@@ -248,6 +248,10 @@ kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-r
       <div><label>Max steps</label><input id="s_browser_max_steps"></div>
     </div>
 
+    <label>Sites the Chrome agent may open (optional, comma separated – empty = any site)</label>
+    <input id="s_browser_allowed_domains" placeholder="youtube.com, *.youtube.com, *.google.com, canadiansme.ca, b2bprint.ca">
+    <div class="hint">Safer: a web page can't lure the agent onto your bank or email if they're not on this list.</div>
+
     <h2 style="margin-top:24px">Voice</h2>
     <div class="row">
       <div><label>Language</label>
@@ -512,7 +516,7 @@ $("#pbDelete").onclick=async()=>{if(!state.editingPb||!confirm("Delete this play
 async function runPb(id){await post(`/api/playbooks/${id}/run`);state.tab="today";toast("Playbook started");refresh();}
 
 /* ---------- settings ---------- */
-const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","about_me","voice_lang","speak_replies"];
+const SKEYS=["provider","gemini_api_key","gemini_model","ollama_url","ollama_model","chrome_mode","browser_provider","chrome_cdp_url","chrome_profile","browser_max_steps","browser_allowed_domains","about_me","voice_lang","speak_replies"];
 async function openSettings(){const s=await api("/api/settings");SKEYS.forEach(k=>$("#s_"+k).value=s[k]??"");$("#testMsg").textContent="";$("#settings").classList.add("open");}
 function closeSettings(){$("#settings").classList.remove("open");}
 async function saveSettings(){const body={};SKEYS.forEach(k=>body[k]=$("#s_"+k).value);await post("/api/settings",body);}

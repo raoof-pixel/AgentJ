@@ -5,7 +5,9 @@ Open Graph, viewport, lang, image alt text, links, structured data, robots.txt,
 sitemap.xml, and (optionally) Google PageSpeed Insights.
 """
 
+import ipaddress
 import json
+import socket
 import time
 import urllib.error
 import urllib.parse
@@ -15,6 +17,34 @@ from html.parser import HTMLParser
 from .. import db, llm
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36 AgentJ-SEO"
+
+
+class BlockedURL(ValueError):
+    pass
+
+
+def check_public_url(url):
+    """Only audit public http(s) sites - never your PC, your router or Chrome's debug port."""
+    p = urllib.parse.urlparse(url)
+    if p.scheme not in ("http", "https") or not p.hostname:
+        raise BlockedURL(f"Only http(s) website addresses can be audited: {url}")
+    try:
+        infos = socket.getaddrinfo(p.hostname, p.port or (443 if p.scheme == "https" else 80))
+    except socket.gaierror:
+        raise BlockedURL(f"Can't find the website {p.hostname} - check the address.")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0].split("%")[0])
+        if not ip.is_global:
+            raise BlockedURL(f"{p.hostname} points to a private/local address ({ip}); AgentJ only audits public websites.")
+
+
+class _SafeRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        check_public_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_opener = urllib.request.build_opener(_SafeRedirect)
 
 
 class PageParser(HTMLParser):
@@ -82,7 +112,8 @@ def fetch(url, timeout=25):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,*/*"})
     t0 = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        check_public_url(url)
+        with _opener.open(req, timeout=timeout) as r:
             body = r.read(3_000_000)
             charset = r.headers.get_content_charset() or "utf-8"
             return r.status, r.geturl(), body.decode(charset, "replace"), time.time() - t0, dict(r.headers)
@@ -195,7 +226,10 @@ def run(task, ctx):
         db.log(task["id"], "No URL found - giving SEO advice instead of an audit")
         return llm.generate(ctx["prompt"] + "\n\nGive practical, prioritized SEO advice for this.",
                             system=ctx["system"], web_search=True, temperature=0.4)
-    a = audit(url, task["id"])
+    try:
+        a = audit(url, task["id"])
+    except BlockedURL as e:
+        return f"**Not audited:** {e}"
     findings = report_md(a)
     db.log(task["id"], "Writing the action plan")
     try:
